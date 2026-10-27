@@ -1,6 +1,6 @@
 {
- "version": "9d00c4e738",
- "builtAt": "2026-10-27T13:31:55.858Z",
+ "version": "39af18b8f6",
+ "builtAt": "2026-10-27T15:29:23.158Z",
  "shell": [
   {
    "url": "./",
@@ -8,7 +8,7 @@
   },
   {
    "url": "css/app.css",
-   "bytes": 22782
+   "bytes": 26900
   },
   {
    "url": "favicon.ico",
@@ -60,11 +60,11 @@
   },
   {
    "url": "index.html",
-   "bytes": 2706
+   "bytes": 2799
   },
   {
    "url": "js/app.js",
-   "bytes": 68754
+   "bytes": 76596
   },
   {
    "url": "js/body.js",
@@ -87,8 +87,16 @@
    "bytes": 2048
   },
   {
+   "url": "js/progress.js",
+   "bytes": 4304
+  },
+  {
+   "url": "js/rest.js",
+   "bytes": 5097
+  },
+  {
    "url": "js/store.js",
-   "bytes": 18851
+   "bytes": 19703
   },
   {
    "url": "manifest.webmanifest",

@@ -259,3 +259,50 @@ textarea.field-text { height: 110px; padding: 10px 12px; font-size: 13px; }
 #fxCues, #exCues, .field-text { font-size: 16px; }
 /* Con 5 rutinas el selector de Hoy se compacta para que el último entrenamiento quede a la vista */
 .pick-grid { gap: 8px; } .pick-grid .pick { min-height: 56px; padding: 9px 14px; } .pick-grid .pick .ltr { width: 34px; height: 34px; font-size: 16px; }
+
+/* Sugerencia semanal (Hoy) */
+.suggest { background: #E3E7DC; border-radius: 18px; padding: 14px 16px; margin: 0 0 10px; }
+.suggest b { display: block; font-family: var(--serif); font-size: 22px; font-weight: 500; line-height: 1.2; margin-top: 2px; }
+.suggest .btn { margin-top: 12px; }
+.pick.sug { border-color: var(--sage); box-shadow: 0 0 0 1px var(--sage) inset; }
+
+/* Progreso (ficha → Historial) */
+.pg-card { padding: 14px 14px 10px; margin: 2px 0 14px; }
+.pg-title { font-weight: 600; font-size: 15px; }
+.pg-wrap { position: relative; margin-top: 8px; }
+.pg-chart { display: block; width: 100%; height: auto; touch-action: pan-y; overflow: visible; }
+.pg-grid { stroke: #E9E3D8; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.pg-tick { font-size: 10.5px; fill: var(--taupe-text); font-variant-numeric: tabular-nums; }
+.pg-line { fill: none; stroke: var(--green); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.pg-dot { fill: var(--green); stroke: var(--card); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.pg-dot.on { stroke: var(--sage-soft); stroke-width: 4; }
+.pg-end { font-size: 12px; font-weight: 600; fill: var(--green); }
+.pg-cross { stroke: var(--sage); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.pg-hit { fill: transparent; cursor: pointer; }
+.pg-tip { position: absolute; z-index: 2; pointer-events: none; background: var(--green); color: var(--cream); font-size: 12.5px; line-height: 1.35; padding: 6px 10px; border-radius: 10px; white-space: nowrap; box-shadow: 0 4px 12px rgba(38, 63, 53, .18); }
+.seg { display: inline-flex; background: #ECE8DF; border-radius: 12px; padding: 3px; flex: none; }
+.seg button { min-height: 32px; padding: 0 12px; border-radius: 9px; font-size: 13px; color: var(--taupe-text); }
+.seg button.on { background: var(--card); color: var(--green); font-weight: 600; box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
+
+/* Temporizador de descanso */
+.rest-cfg { display: flex; align-items: center; gap: 10px; margin: 12px 0 0; padding: 8px 8px 8px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; }
+.rest-set { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; min-height: 44px; text-align: left; font-size: 15px; }
+.rest-set svg { flex: none; }
+.rest-set b { font-variant-numeric: tabular-nums; }
+.rest-step { display: flex; align-items: center; gap: 4px; }
+.rest-step b { min-width: 52px; text-align: center; font-variant-numeric: tabular-nums; }
+.rest-pill { position: fixed; z-index: 30; left: 12px; right: 12px; top: calc(var(--top-h) + var(--safe-t) + 6px); display: flex; align-items: center; gap: 6px; padding: 8px 8px 8px 16px; border-radius: 18px; overflow: hidden;
+  background: var(--green); color: var(--cream); box-shadow: 0 8px 24px rgba(38, 63, 53, .25); }
+.rest-pill[hidden] { display: none; }
+.rest-pill .rest-label { font-size: 13px; opacity: .8; }
+.rest-pill .rest-time { flex: 1; font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: .02em; margin-left: 4px; }
+.rest-pill button { min-width: 44px; min-height: 40px; border-radius: 12px; background: rgba(245, 240, 231, .14); color: var(--cream); font-size: 14px; font-weight: 600; }
+.rest-pill .rest-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(245, 240, 231, .15); }
+.rest-pill .rest-bar b { display: block; height: 100%; background: var(--sage-soft); transition: width .25s linear; }
+.rest-pill.done { background: var(--sage); color: #1c2a23; }
+.rest-pill.done .rest-label { flex: 1; font-size: 17px; font-weight: 600; opacity: 1; }
+.rest-pill.done button { background: rgba(28, 42, 35, .12); color: #1c2a23; }
+/* Doble destello al terminar el descanso (aviso visual aunque no haya sonido) */
+#flash { position: fixed; inset: 0; z-index: 60; pointer-events: none; background: var(--green); opacity: 0; }
+#flash.go { animation: restflash 1.1s ease-out 1; }
+@keyframes restflash { 0% { opacity: 0; } 12% { opacity: .85; } 34% { opacity: 0; } 56% { opacity: .85; } 80%, 100% { opacity: 0; } }

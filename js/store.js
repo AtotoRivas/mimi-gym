@@ -162,6 +162,18 @@ export class Store {
     return { date, logs: day, routineIds: [...new Set(day.map(l => l.routineId).filter(Boolean))] };
   }
 
+  /* Sugerencia de rutina: rotación A → B → C que empieza de cero cada lunes.
+     Se sugiere la primera de A/B/C que aún no tenga ningún registro esta semana (así, aunque se salte el orden,
+     al final de la semana se han cubierto las tres). Rutinas vaciadas por Mimi no entran en la rotación. */
+  async suggestRoutine(date = dateKey()) {
+    const start = weekStart(date);
+    const week = (await this.allLogs()).filter(l => l.date >= start && l.date <= date && l.routineId);
+    const cycle = ['A', 'B', 'C'].filter(id => this.routine(id)?.exerciseIds.length);
+    const doneWeek = new Set(week.map(l => l.routineId));
+    const today = [...new Set(week.filter(l => l.date === date).map(l => l.routineId))];
+    return { next: cycle.find(id => !doneWeek.has(id)) || null, done: cycle.filter(id => doneWeek.has(id)), today, cycle };
+  }
+
   /* ---------- Calendario y planificación ---------- */
   async trainedDates() { return new Set((await this.db.getAll('logs')).map(l => l.date)); }
   async plans() { const m = {}; (await this.db.getAll('plans')).forEach(p => { m[p.id] = p; }); return m; }

@@ -4,6 +4,8 @@ import { MUSCLES, muscleLabel } from './catalog.js';
 import { bodyPair, thumb } from './body.js';
 import * as offline from './offline.js';
 import { findMatches, shrinkPhoto } from './photos.js';
+import { progressSeries, chartSvg, layout } from './progress.js';
+import * as rest from './rest.js';
 
 const store = new Store(new IdbAdapter());
 const view = document.getElementById('view');
@@ -46,6 +48,7 @@ const I = {
   swap: '<svg viewBox="0 0 24 24"><path d="M7 7h12l-3-3M17 17H5l3 3"/></svg>',
   play: '<svg width="26" height="26" viewBox="0 0 24 24" fill="#263F35"><path d="M8 5.5v13l11-6.5z"/></svg>',
   cam: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.6"/></svg>',
+  clock: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/></svg>',
   cal: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg>',
 };
 
@@ -163,9 +166,11 @@ async function renderHoy() {
   const showLegacy = legacyRaw() && !store.settings.legacyImported && !store.settings.legacyDismissed;
   const legacyBanner = showLegacy ? `<div class="card last-box" style="margin-top:12px"><b>Datos de la versión anterior</b><p class="small muted" style="margin:4px 0 10px">He encontrado entrenamientos guardados por la V2.2 en este dispositivo. Revísalos antes de importarlos.</p><div class="row"><button class="btn btn-secondary btn-sm" data-legacy-go>Revisar</button><button class="btn btn-ghost btn-sm" data-legacy-no>Ahora no</button></div></div>` : '';
   const r = plan ? store.routine(plan.routineId) : null;
+  const sug = r ? null : await store.suggestRoutine(today);
+  const sugId = sug?.next && !sug.today.some(id => sug.cycle.includes(id)) ? sug.next : null;
   const count = x => x.exerciseIds.length ? plural(x.exerciseIds.length, 'ejercicio', 'ejercicios') : 'Sin ejercicios todavía';
   const hero = r ? `<section class="hero t-${esc(r.id)}"><div class="letter">${esc(r.id)}</div><div class="lead">Hoy toca</div><h2>${esc(r.short)}</h2><div class="lead">${count(r)}</div><button class="btn btn-primary" data-start="${esc(r.id)}">${r.exerciseIds.length ? `Empezar entrenamiento ${I.arrow}` : 'Elegir ejercicios'}</button></section>`
-    : `<div class="eyebrow">¿Qué toca hoy?</div><div class="pick-grid">${store.routines.map(x => `<button class="pick" data-start="${esc(x.id)}"><span class="ltr t-${esc(x.id)}">${esc(x.id)}</span><span class="grow"><b>${esc(x.name)}</b><br><span class="small muted">${count(x)}</span></span>${I.chev}</button>`).join('')}</div>`;
+    : `<div class="eyebrow">¿Qué toca hoy?</div>${suggestBox(sug)}<div class="pick-grid">${store.routines.map(x => `<button class="pick ${sugId === x.id ? 'sug' : ''}" data-start="${esc(x.id)}"><span class="ltr t-${esc(x.id)}">${esc(x.id)}</span><span class="grow"><b>${esc(x.name)}</b>${sugId === x.id ? '<span class="pill ok">Sugerida</span>' : ''}<br><span class="small muted">${count(x)}${sug?.done.includes(x.id) ? ' · hecha esta semana' : ''}</span></span>${I.chev}</button>`).join('')}</div>`;
   const lastTitle = last ? (last.routineIds.length ? last.routineIds.map(id => store.routine(id)?.short || id).join(' · ') : last.logs.length === 1 ? (store.exercise(last.logs[0].exerciseId)?.name || 'Ejercicio') : 'Entrenamiento libre') : '';
   const lastBox = last ? `<div class="eyebrow">Último entrenamiento</div><div class="card lastday">
       <a class="row ld-head" href="#/dia/${last.date}"><div class="grow"><b>${esc(lastTitle)}</b><div class="small muted">${esc(fLong(last.date))} · ${plural(last.logs.length, 'ejercicio', 'ejercicios')}</div></div>${I.chev}</a>
@@ -183,6 +188,19 @@ async function renderHoy() {
     if (e.target.closest('[data-legacy-go]')) return legacyReview(legacyRaw(), renderHoy);
     if (e.target.closest('[data-legacy-no]')) { await store.setSetting('legacyDismissed', true); renderHoy(); }
   };
+}
+
+/* Sugerencia de la rotación semanal A → B → C (se reinicia cada lunes) */
+function suggestBox(sug) {
+  if (!sug || !sug.cycle.length) return '';
+  const name = id => `${id} · ${store.routine(id)?.short || ''}`;
+  const doneToday = sug.today.filter(id => sug.cycle.includes(id));
+  const nx = sug.next ? store.routine(sug.next) : null;
+  if (doneToday.length) return `<div class="suggest"><div class="small muted">Hoy ya has hecho</div><b>${esc(doneToday.map(name).join(' y '))}</b>
+    <div class="small muted" style="margin-top:4px">${nx ? `La próxima vez te tocaría la rutina ${esc(name(nx.id))}.` : 'Con esto has hecho A, B y C esta semana.'}</div></div>`;
+  if (nx) return `<div class="suggest"><div class="small muted">Sugerencia para hoy${sug.done.length ? ` · esta semana llevas ${esc(sug.done.join(', '))}` : ''}</div><b>Rutina ${esc(name(nx.id))}</b>
+    <button class="btn btn-primary" data-start="${esc(nx.id)}">Empezar rutina ${esc(nx.id)} ${I.arrow}</button></div>`;
+  return `<div class="suggest"><div class="small muted">Esta semana ya has hecho A, B y C</div><b>Si vuelves, Full body es buena opción</b></div>`;
 }
 
 /* ---------- RUTINAS ---------- */
@@ -290,11 +308,40 @@ async function renderFicha(id) {
   const setsHtml = sets => sets.map((s, i) => `<div class="set-line"><span>Serie ${i + 1}</span><b>${fmt(s.kg)} kg × ${s.reps} reps</b></div>`).join('');
   const tabs = { how: 'Cómo se hace', muscles: 'Músculos', hist: 'Historial' };
   let tab = 'how';
+  let metric = store.settings.chartMetric === 'reps' ? 'reps' : 'kg';
+  const M = { kg: { btn: 'Peso', title: 'Peso más alto de cada día', unit: 'kg', fv: v => fmt(v) }, reps: { btn: 'Repeticiones', title: 'Repeticiones totales de cada día', unit: 'reps', fv: v => String(Math.round(v)) } };
+  const progress = () => {
+    const series = progressSeries(logs, metric); if (!logs.length) return '';
+    if (series.length < 2) return '<div class="card pg-card"><div class="eyebrow" style="margin:0 0 4px">Tu progreso</div><p class="small muted" style="margin:0 0 6px">Cuando registres este ejercicio otro día, aquí verás cómo evolucionas.</p></div>';
+    const m = M[metric], a = series[0], z = series.at(-1);
+    return `<div class="card pg-card"><div class="row" style="margin-bottom:6px"><div class="eyebrow grow" style="margin:0">Tu progreso</div>
+      <div class="seg" role="group" aria-label="Qué mostrar">${Object.entries(M).map(([k, v]) => `<button type="button" data-metric="${k}" class="${k === metric ? 'on' : ''}" aria-pressed="${k === metric}">${v.btn}</button>`).join('')}</div></div>
+      <div class="pg-title">${m.title}</div>
+      <div class="small muted">Desde el ${esc(fMid(a.date))}: de ${m.fv(a.value)} a ${m.fv(z.value)} ${m.unit} · ${plural(series.length, 'día', 'días')}</div>
+      <div class="pg-wrap">${chartSvg(series, { unit: m.unit, fmtV: m.fv, fmtD: fShort, label: `${m.title}: de ${m.fv(a.value)} a ${m.fv(z.value)} ${m.unit}` })}<div class="pg-tip" hidden></div></div></div>`;
+  };
+  // Tocar (o pasar el ratón) sobre el gráfico: línea vertical + valor de ese día.
+  const wireChart = () => {
+    const svg = view.querySelector('.pg-chart'); if (!svg) return;
+    const series = progressSeries(logs, metric); const g = layout(series); const m = M[metric];
+    const tip = view.querySelector('.pg-tip'); const cross = svg.querySelector('.pg-cross');
+    const show = i => {
+      const p = g.pts[i]; const box = svg.getBoundingClientRect(); const k = box.width / g.w;
+      cross.setAttribute('x1', p.x); cross.setAttribute('x2', p.x); cross.setAttribute('visibility', 'visible');
+      svg.querySelectorAll('.pg-dot').forEach(d => d.classList.toggle('on', Number(d.dataset.i) === i));
+      tip.innerHTML = `<b>${esc(fMid(p.date))}</b><br>${m.fv(p.value)} ${m.unit} · ${plural(p.sets, 'serie', 'series')}`;
+      tip.hidden = false;
+      const tw = tip.offsetWidth; tip.style.left = Math.max(0, Math.min(box.width - tw, p.x * k - tw / 2)) + 'px'; tip.style.top = Math.max(0, p.y * k - tip.offsetHeight - 12) + 'px';
+    };
+    const pick = ev => { const box = svg.getBoundingClientRect(); const x = (ev.clientX - box.left) / box.width * g.w; let best = 0; g.pts.forEach((p, i) => { if (Math.abs(p.x - x) < Math.abs(g.pts[best].x - x)) best = i; }); show(best); };
+    svg.addEventListener('pointerdown', pick); svg.addEventListener('pointermove', ev => { if (ev.pointerType === 'mouse') pick(ev); });
+    svg.addEventListener('pointerleave', ev => { if (ev.pointerType === 'mouse') { tip.hidden = true; cross.setAttribute('visibility', 'hidden'); svg.querySelectorAll('.pg-dot.on').forEach(d => d.classList.remove('on')); } });
+  };
   const body = () => {
     if (tab === 'how') return e.cues.length ? e.cues.map((c, i) => `<div class="cue"><b>${i + 1}</b><span>${esc(c)}</span></div>`).join('') : '<p class="muted">Este ejercicio es tuyo y aún no tiene claves técnicas. Puedes añadirlas con «Editar».</p>';
     if (tab === 'muscles' && !e.primary.length) return '<p class="muted center" style="padding:20px 0">Aún no has indicado qué músculos trabaja. Puedes hacerlo con «Editar».</p>';
     if (tab === 'muscles') return bodyPair({ selected: new Set(e.primary) }).replace('body-pair', 'body-pair static') + `<div class="muscle-legend">${e.primary.map(m => `<span><i></i>${esc(muscleLabel(m))}</span>`).join('')}</div>${e.secondary.length ? `<p class="small muted center">También trabaja: ${esc(e.secondary.map(muscleLabel).join(', '))}</p>` : ''}`;
-    return logs.length ? logs.map(l => `<div class="hist-day"><div class="row"><b class="grow">${esc(fMid(l.date))}</b><a class="small" style="text-decoration:underline" href="#/entrenar/${esc(id)}?log=${esc(l.id)}">Editar</a></div>${setsHtml(l.sets)}</div>`).join('') : '<p class="muted center" style="padding:20px 0">Todavía no hay registros de este ejercicio.</p>';
+    return progress() + (logs.length ? logs.map(l => `<div class="hist-day"><div class="row"><b class="grow">${esc(fMid(l.date))}</b><a class="small" style="text-decoration:underline" href="#/entrenar/${esc(id)}?log=${esc(l.id)}">Editar</a></div>${setsHtml(l.sets)}</div>`).join('') : '<p class="muted center" style="padding:20px 0">Todavía no hay registros de este ejercicio.</p>');
   };
   view.innerHTML = `${media}
     <h1 class="page-title" style="font-size:28px">${esc(e.name)}</h1>
@@ -307,7 +354,9 @@ async function renderFicha(id) {
   view.querySelector('.media.pic .fg')?.addEventListener('error', ev => { ev.target.closest('.media').innerHTML = `<div class="pending"><div class="machine">${esc(e.machine || e.name)}</div><div class="small muted" style="margin-top:8px">Imagen no descargada. Prepárala sin conexión desde Ajustes.</div></div>`; });
   view.onclick = ev => {
     const t = ev.target.closest('[data-tab]');
-    if (t) { tab = t.dataset.tab; view.querySelectorAll('.tabs-in button').forEach(b => b.classList.toggle('on', b === t)); $('#tabBody').innerHTML = body(); return; }
+    if (t) { tab = t.dataset.tab; view.querySelectorAll('.tabs-in button').forEach(b => b.classList.toggle('on', b === t)); $('#tabBody').innerHTML = body(); wireChart(); return; }
+    const mt = ev.target.closest('[data-metric]');
+    if (mt) { metric = mt.dataset.metric; store.setSetting('chartMetric', metric); $('#tabBody').innerHTML = body(); wireChart(); return; }
     if (ev.target.closest('[data-train]')) return go(`#/entrenar/${id}`);
     if (ev.target.closest('[data-edit]')) return openEditExercise(e);
     const ph = ev.target.closest('#photo');
@@ -387,6 +436,7 @@ async function renderEntrenar(exId, q) {
       <div class="stepbar">Salto de peso:<button class="chip ${st.step === 2.5 ? 'on' : ''}" data-act="step" data-v="2.5">2,5 kg</button><button class="chip ${st.step === 5 ? 'on' : ''}" data-act="step" data-v="5">5 kg</button></div>
       <div id="sets">${st.sets.map(rowHtml).join('')}</div>
       <button class="btn btn-secondary" data-act="add">Añadir serie</button>
+      ${editing ? '' : `<div class="rest-cfg"><button type="button" class="rest-set" data-act="rest-cfg" aria-label="Cambiar tiempo de descanso">${I.clock}<span>Descanso <b id="restSec">${rest.fmtClock(restPref().sec)}</b><span class="small muted" id="restSnd"> · ${restPref().sound ? 'con sonido' : 'sin sonido'}</span></span></button><button type="button" class="btn btn-primary btn-sm" data-act="rest-go">Empezar</button></div>`}
       ${editing ? '' : `<div class="date-line"><label for="dt">Fecha</label><input id="dt" type="date" value="${st.date}" max="${dateKey()}"></div>`}
       <div class="savebar">${editing ? '<button class="btn btn-danger" style="flex:0 0 auto;width:auto" data-act="delete">Eliminar</button>' : ''}<button class="btn btn-primary" data-act="save">${saveLabel()}</button></div>`;
     markRows();
@@ -419,6 +469,8 @@ async function renderEntrenar(exId, q) {
       const next = Math.max(0, Math.round((cur + dir * step) * 100) / 100);
       inp.value = f === 'kg' ? fmt(next) : String(Math.round(next)); st.sets[i][f] = inp.value; markRows(); refreshSave(); persist();
     } else if (a === 'add') { const prev = st.sets[st.sets.length - 1]; st.sets.push(prev && (prev.kg || prev.reps) ? { ...prev } : { kg: '', reps: '' }); rerenderSets(); view.querySelector('.set-row:last-child [data-f="kg"]')?.focus(); }
+    else if (a === 'rest-go') { const p = restPref(); rest.start(p.sec, { sound: p.sound }); }
+    else if (a === 'rest-cfg') openRestSheet(() => { const p = restPref(); $('#restSec').textContent = rest.fmtClock(p.sec); $('#restSnd').textContent = ` · ${p.sound ? 'con sonido' : 'sin sonido'}`; });
     else if (a === 'dup') { st.sets.splice(i + 1, 0, { ...st.sets[i] }); rerenderSets(); }
     else if (a === 'del') { st.sets.splice(i, 1); if (!st.sets.length) st.sets.push({ kg: '', reps: '' }); rerenderSets(); }
     else if (a === 'copy') {
@@ -439,6 +491,23 @@ async function renderEntrenar(exId, q) {
     }
   };
   return () => { document.removeEventListener('visibilitychange', onHide); window.removeEventListener('pagehide', flush); flush(); };
+}
+
+/* Preferencias del descanso: lo último que eligió Mimi queda como predeterminado. */
+const restPref = () => ({ sec: Number(store.settings.restSec) || rest.DEFAULT_REST.sec, sound: store.settings.restSound ?? rest.DEFAULT_REST.sound });
+function openRestSheet(onChange) {
+  const body = () => { const p = restPref(); return `<h3>Tiempo de descanso</h3><p class="sub">Se queda guardado para las próximas veces.</p>
+    <div class="chips wrap">${rest.REST_OPTIONS.map(s => `<button type="button" class="chip ${s === p.sec ? 'on' : ''}" data-sec="${s}">${rest.fmtClock(s)}</button>`).join('')}</div>
+    <div class="row" style="margin:14px 0"><span class="grow">Ajuste fino</span><div class="stepper rest-step"><button type="button" data-fine="-15" aria-label="Quitar 15 segundos">−</button><b>${rest.fmtClock(p.sec)}</b><button type="button" data-fine="15" aria-label="Añadir 15 segundos">+</button></div></div>
+    <button type="button" class="list-item" data-snd><div class="grow"><div class="t">Sonar al terminar</div><div class="s">La pantalla da un doble destello siempre. En iPhone, con el modo silencio activado no suena.</div></div><span class="switch ${p.sound ? 'on' : ''}" role="switch" aria-checked="${p.sound}"></span></button>
+    <div class="spacer"></div><button class="btn btn-primary" data-close>Listo</button>`; };
+  const save = async (k, v) => { await store.setSetting(k, v); setSheet(sheet, body()); onChange?.(); };
+  const sheet = openSheet(body(), ev => {
+    const c = ev.target.closest('[data-sec]'); if (c) return save('restSec', Number(c.dataset.sec));
+    const f = ev.target.closest('[data-fine]'); if (f) return save('restSec', Math.min(600, Math.max(15, restPref().sec + Number(f.dataset.fine))));
+    if (ev.target.closest('[data-snd]')) return save('restSound', !restPref().sound);
+    if (ev.target.closest('[data-close]')) closeSheet();
+  });
 }
 
 /* ---------- CALENDARIO ---------- */
@@ -723,6 +792,7 @@ function setupServiceWorker() {
     navigator.storage?.persist?.().catch(() => {});
     $('#app').hidden = false;
     if (!location.hash) history.replaceState(null, '', '#/hoy');
+    rest.setup();
     await render();
     setupServiceWorker();
   } catch (err) {
