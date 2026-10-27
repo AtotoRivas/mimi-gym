@@ -107,6 +107,50 @@ export const BASE_EXERCISES = [
     id: 'abdominal-maquina', name: 'Abdominal en máquina', machine: 'Máquina de abdominales', primary: ['abdomen'], secondary: [], step: 2.5,
     cues: ['Ajusta el asiento para que el eje de giro quede a la altura de la cintura', 'Flexiona el tronco con el abdomen, sin tirar con los brazos', 'Vuelve despacio sin dejar caer la carga'],
   },
+  {
+    id: 'curl-femoral-sentada', name: 'Curl femoral sentada', machine: 'Máquina de curl femoral sentada', primary: ['isquios'], secondary: ['gemelos'], step: 2.5,
+    cues: ['Ajusta el respaldo para que la rodilla quede a la altura del eje de giro', 'Coloca el rodillo justo por encima de los tobillos', 'Flexiona las rodillas con control y vuelve despacio'],
+  },
+  {
+    id: 'sentadilla-goblet', name: 'Sentadilla goblet', machine: 'Mancuerna', primary: ['cuadriceps', 'gluteos'], secondary: ['abdomen'], step: 2.5,
+    cues: ['Sostén la mancuerna pegada al pecho, con los codos hacia abajo', 'Pies a la anchura de los hombros y rodillas siguiendo la dirección de los pies', 'Baja con control con el tronco erguido y sube empujando el suelo con todo el pie'],
+  },
+  {
+    id: 'peso-muerto-rumano', name: 'Peso muerto rumano con mancuernas', machine: 'Mancuernas', primary: ['isquios', 'gluteos'], secondary: [], step: 2.5,
+    cues: ['Mantén las mancuernas cerca de las piernas durante todo el recorrido', 'Lleva la cadera hacia atrás con las rodillas ligeramente flexionadas y la espalda neutra', 'Baja hasta notar el estiramiento detrás del muslo, sin redondear la espalda, y sube apretando el glúteo'],
+  },
+  {
+    id: 'zancadas', name: 'Zancadas con mancuernas', machine: 'Mancuernas', primary: ['cuadriceps', 'gluteos'], secondary: ['isquios'], step: 2.5,
+    cues: ['Da un paso largo y mantén el tronco erguido', 'Baja con control hasta que las dos rodillas queden flexionadas, con la rodilla delantera alineada con el pie', 'Empuja con la pierna delantera para volver, sin impulso'],
+  },
+  {
+    id: 'hip-thrust-banco', name: 'Hip thrust en banco', machine: 'Banco y barra o mancuerna', primary: ['gluteos'], secondary: ['isquios'], step: 5,
+    cues: ['Apoya la parte alta de la espalda en el banco y los pies firmes en el suelo', 'Sube la cadera hasta alinear tronco y muslos, sin arquear la zona lumbar', 'Baja con control, con la barbilla ligeramente recogida'],
+  },
+  {
+    id: 'press-banca-mancuernas', name: 'Press de pecho con mancuernas', machine: 'Banco y mancuernas', primary: ['pecho'], secondary: ['triceps', 'hombros'], step: 2.5,
+    cues: ['Espalda apoyada en el banco y pies firmes en el suelo', 'Baja las mancuernas con control hasta que los codos queden a la altura del pecho, algo separados del cuerpo', 'Empuja hacia arriba sin chocar las mancuernas ni bloquear los codos'],
+  },
+  {
+    id: 'press-hombros-mancuernas', name: 'Press de hombros con mancuernas', machine: 'Banco y mancuernas', primary: ['hombros'], secondary: ['triceps'], step: 2.5,
+    cues: ['Sentada con la espalda apoyada y sin arquear la zona lumbar', 'Empieza con las mancuernas a la altura de los hombros y los antebrazos verticales', 'Empuja hacia arriba sin bloquear los codos y baja con control'],
+  },
+  {
+    id: 'elevaciones-laterales', name: 'Elevaciones laterales', machine: 'Mancuernas', primary: ['hombros'], secondary: [], step: 1,
+    cues: ['Usa mancuernas ligeras y los codos ligeramente flexionados', 'Sube los brazos hacia los lados hasta la altura de los hombros, sin balancear el tronco', 'Baja despacio, sin dejar caer los brazos'],
+  },
+  {
+    id: 'remo-mancuerna', name: 'Remo con mancuerna', machine: 'Banco y mancuerna', primary: ['espalda'], secondary: ['biceps'], step: 2.5,
+    cues: ['Apoya una mano y una rodilla en el banco, con la espalda recta', 'Tira de la mancuerna hacia la cadera llevando el codo hacia atrás', 'Baja despacio hasta estirar el brazo, sin girar el tronco'],
+  },
+  {
+    id: 'face-pull', name: 'Face pull en polea', machine: 'Polea con cuerda', primary: ['hombros', 'espalda'], secondary: [], step: 2.5,
+    cues: ['Coloca la polea a la altura de la cara o algo por encima, con cuerda', 'Tira hacia la cara abriendo los codos hacia fuera y atrás', 'Vuelve despacio, sin encoger los hombros'],
+  },
+  {
+    id: 'curl-biceps-mancuernas', name: 'Curl de bíceps con mancuernas', machine: 'Mancuernas', primary: ['biceps'], secondary: [], step: 2.5,
+    cues: ['Codos pegados al cuerpo y quietos', 'Sube sin balancear el tronco', 'Baja despacio hasta casi extender el brazo'],
+  },
 ];
 
 export const DEFAULT_ROUTINES = [
