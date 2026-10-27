@@ -30,7 +30,7 @@ function unlockAudio() {
     const o = audio.createOscillator(), g = audio.createGain(); g.gain.value = 0; o.connect(g).connect(audio.destination); o.start(); o.stop(audio.currentTime + 0.01);
   } catch {}
 }
-export const BEEPS = 3;
+export const BEEPS = 6;
 const setSession = type => { try { if (navigator.audioSession) navigator.audioSession.type = type; } catch {} };
 function beep() {
   try {
