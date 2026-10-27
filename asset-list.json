@@ -1,6 +1,6 @@
 {
- "version": "39af18b8f6",
- "builtAt": "2026-10-27T15:29:23.158Z",
+ "version": "f596357d38",
+ "builtAt": "2026-10-27T15:46:02.345Z",
  "shell": [
   {
    "url": "./",
@@ -8,7 +8,7 @@
   },
   {
    "url": "css/app.css",
-   "bytes": 26900
+   "bytes": 27308
   },
   {
    "url": "favicon.ico",
@@ -60,11 +60,11 @@
   },
   {
    "url": "index.html",
-   "bytes": 2799
+   "bytes": 2865
   },
   {
    "url": "js/app.js",
-   "bytes": 76596
+   "bytes": 76943
   },
   {
    "url": "js/body.js",
@@ -92,7 +92,7 @@
   },
   {
    "url": "js/rest.js",
-   "bytes": 5097
+   "bytes": 5952
   },
   {
    "url": "js/store.js",

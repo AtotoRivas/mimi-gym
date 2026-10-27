@@ -1,8 +1,12 @@
 // Temporizador de descanso. Global: sigue contando aunque Mimi cambie de pantalla.
 // Cuenta contra la hora real (endAt), no contra ticks: si iOS congela la app en segundo plano,
 // al volver se recalcula y, si ya ha terminado, avisa en ese momento.
-// Limitaciones de iPhone: una web no puede vibrar ni avisar con la pantalla bloqueada; el sonido
-// no se oye con el interruptor de silencio. Por eso el aviso principal es visual (doble destello).
+// Limitaciones de iPhone: una web no puede vibrar ni ejecutar nada con la app cerrada o la pantalla
+// bloqueada (no hay notificaciones programadas sin servidor). Por eso se mantiene la pantalla encendida
+// durante el descanso y el aviso principal es visual (doble destello a pantalla completa).
+// Música: con la Audio Session API (Safari iOS 16.4+) los pitidos se marcan como sonido "transitorio",
+// que suena por encima de la música y puede bajarle el volumen mientras suena; después se vuelve a "ambient"
+// (mezcla sin tocar la música). Sin esa API, los pitidos se mezclan con la música sin bajarla.
 
 export const REST_OPTIONS = [30, 45, 60, 75, 90, 120, 150, 180, 240];
 export const DEFAULT_REST = { sec: 90, sound: true };
@@ -19,22 +23,28 @@ const el = id => document.getElementById(id);
 function unlockAudio() {
   try {
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    setSession('ambient'); // preparar el audio no debe parar ni bajar la música
     audio ??= new AC();
     if (audio.state === 'suspended') audio.resume().catch(() => {});
     // Un sonido inaudible dentro del gesto deja el contexto desbloqueado en iOS.
     const o = audio.createOscillator(), g = audio.createGain(); g.gain.value = 0; o.connect(g).connect(audio.destination); o.start(); o.stop(audio.currentTime + 0.01);
   } catch {}
 }
+export const BEEPS = 3;
+const setSession = type => { try { if (navigator.audioSession) navigator.audioSession.type = type; } catch {} };
 function beep() {
   try {
-    if (!audio) return; if (audio.state === 'suspended') audio.resume().catch(() => {});
-    const t0 = audio.currentTime + 0.02;
-    [0, 0.32].forEach(dt => {
-      const o = audio.createOscillator(), g = audio.createGain();
+    if (!audio) return;
+    setSession('transient'); // por encima de la música, bajándola (si iOS lo permite)
+    if (audio.state === 'suspended') audio.resume().catch(() => {});
+    const t0 = audio.currentTime + 0.05;
+    for (let k = 0; k < BEEPS; k++) {
+      const dt = k * 0.34, o = audio.createOscillator(), g = audio.createGain();
       o.type = 'sine'; o.frequency.value = 880;
-      g.gain.setValueAtTime(0.0001, t0 + dt); g.gain.exponentialRampToValueAtTime(0.35, t0 + dt + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dt + 0.22);
-      o.connect(g).connect(audio.destination); o.start(t0 + dt); o.stop(t0 + dt + 0.25);
-    });
+      g.gain.setValueAtTime(0.0001, t0 + dt); g.gain.exponentialRampToValueAtTime(0.6, t0 + dt + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dt + 0.24);
+      o.connect(g).connect(audio.destination); o.start(t0 + dt); o.stop(t0 + dt + 0.26);
+    }
+    setTimeout(() => setSession('ambient'), (BEEPS * 0.34 + 0.6) * 1000); // la música vuelve a su volumen
   } catch {}
 }
 async function keepAwake(on) {

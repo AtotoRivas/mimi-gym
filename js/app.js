@@ -793,6 +793,9 @@ function setupServiceWorker() {
     $('#app').hidden = false;
     if (!location.hash) history.replaceState(null, '', '#/hoy');
     rest.setup();
+    // Sin zoom (petición expresa): iOS ignora a veces user-scalable=no; esto bloquea el pellizco.
+    ['gesturestart', 'gesturechange'].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive: false }));
+    document.addEventListener('touchmove', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
     await render();
     setupServiceWorker();
   } catch (err) {
