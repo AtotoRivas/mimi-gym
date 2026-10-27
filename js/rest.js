@@ -41,7 +41,7 @@ function beep() {
     for (let k = 0; k < BEEPS; k++) {
       const dt = k * 0.34, o = audio.createOscillator(), g = audio.createGain();
       o.type = 'sine'; o.frequency.value = 880;
-      g.gain.setValueAtTime(0.0001, t0 + dt); g.gain.exponentialRampToValueAtTime(0.6, t0 + dt + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dt + 0.24);
+      g.gain.setValueAtTime(0.0001, t0 + dt); g.gain.exponentialRampToValueAtTime(0.9, t0 + dt + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dt + 0.24);
       o.connect(g).connect(audio.destination); o.start(t0 + dt); o.stop(t0 + dt + 0.26);
     }
     setTimeout(() => setSession('ambient'), (BEEPS * 0.34 + 0.6) * 1000); // la música vuelve a su volumen
