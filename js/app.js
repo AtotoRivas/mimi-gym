@@ -265,9 +265,12 @@ async function renderFicha(id) {
   const last = await store.lastLog(id);
   const logs = await store.logsForExercise(id);
   const ver = store.verifiedIds().has(id);
+  const pend = clip?.validated === true ? '' : '<div class="badge">Demostración pendiente de validar</div>';
   const media = clip?.video
-    ? `<div class="media" id="media">${clip.poster ? `<img src="${esc(clip.poster)}" alt="">` : `<div class="pending"><div class="machine">${esc(e.machine || e.name)}</div></div>`}<button class="play" aria-label="Reproducir demostración"><span>${I.play}</span></button>${clip.validated === true ? '' : '<div class="badge">Demostración pendiente de validar</div>'}</div>`
-    : `<div class="media"><div class="pending"><div class="machine">${esc(e.machine || e.name)}</div><div class="small muted" style="margin-top:8px">Aquí irá una demostración en vídeo</div></div><div class="badge">Demostración pendiente de validar</div></div>`;
+    ? `<div class="media" id="media">${clip.poster ? `<img src="${esc(clip.poster)}" alt="${esc(e.name)}">` : `<div class="pending"><div class="machine">${esc(e.machine || e.name)}</div></div>`}<button class="play" aria-label="Reproducir demostración"><span>${I.play}</span></button>${pend}</div>`
+    : clip?.poster
+      ? `<div class="media"><img src="${esc(clip.poster)}" alt="${esc(e.name)}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'pending',innerHTML:'<div class=machine>${esc(e.machine || e.name)}</div>'}))">${pend}</div>`
+      : `<div class="media"><div class="pending"><div class="machine">${esc(e.machine || e.name)}</div><div class="small muted" style="margin-top:8px">Aquí irá una demostración</div></div><div class="badge">Demostración pendiente de validar</div></div>`;
   const setsHtml = sets => sets.map((s, i) => `<div class="set-line"><span>Serie ${i + 1}</span><b>${fmt(s.kg)} kg × ${s.reps} reps</b></div>`).join('');
   const tabs = { how: 'Cómo se hace', muscles: 'Músculos', hist: 'Historial' };
   let tab = 'how';
@@ -542,7 +545,7 @@ async function renderAjustes() {
       const mb = n => (n / 1048576).toFixed(1).replace('.', ',') + ' MB';
       box.innerHTML = `<div class="row"><b class="grow">${label}</b>${s.state === 'ready' || s.state === 'shell-only' ? `<span class="pill ok">${I.check}</span>` : '<span class="pill">!</span>'}</div>
         ${s.shell ? `<div class="small muted" style="margin-top:6px">App: ${s.shell.ok} de ${s.shell.total} archivos guardados</div>` : ''}
-        ${s.media ? `<div class="small muted">Vídeos: ${s.media.total ? `${s.media.ok} de ${s.media.total} descargados${s.media.bytesAll ? ` (${mb(s.media.bytesOk)} de ${mb(s.media.bytesAll)})` : ''}` : 'todavía no hay vídeos validados en esta versión'}</div>` : ''}
+        ${s.media ? `<div class="small muted">Demostraciones: ${s.media.total ? `${s.media.ok} de ${s.media.total} archivos descargados${s.media.bytesAll ? ` (${mb(s.media.bytesOk)} de ${mb(s.media.bytesAll)})` : ''}` : 'todavía no hay imágenes ni vídeos en esta versión'}</div>` : ''}
         ${s.persisted !== null && s.persisted !== undefined ? `<div class="small muted">Almacenamiento protegido: ${s.persisted ? 'sí' : 'no concedido. iOS podría liberar espacio si hace falta'}</div>` : ''}
         ${s.supported ? `${s.media.total ? '' : '<!--'}<div class="chips" id="scope" style="margin-top:10px">${store.routines.map(r => `<button class="chip on" data-scope="${esc(r.id)}">Rutina ${esc(r.id)}</button>`).join('')}</div>${s.media.total ? '' : '-->'}
         <div id="prog" hidden><div class="progress"><i></i></div><div class="small muted" id="progTxt"></div></div>

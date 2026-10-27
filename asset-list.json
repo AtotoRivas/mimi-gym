@@ -1,6 +1,6 @@
 {
- "version": "3930f907a2",
- "builtAt": "2026-10-27T10:32:12.452Z",
+ "version": "8ef3dde22a",
+ "builtAt": "2026-10-27T11:21:25.164Z",
  "shell": [
   {
    "url": "./",
@@ -64,11 +64,11 @@
   },
   {
    "url": "js/app.js",
-   "bytes": 58523
+   "bytes": 58844
   },
   {
    "url": "js/body.js",
-   "bytes": 4591
+   "bytes": 4528
   },
   {
    "url": "js/catalog.js",
@@ -92,7 +92,7 @@
   },
   {
    "url": "media/manifest.json",
-   "bytes": 18
+   "bytes": 16
   },
   {
    "url": "asset-list.json",

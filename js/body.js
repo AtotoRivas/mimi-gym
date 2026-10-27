@@ -3,37 +3,36 @@
 const H = (d) => ({ d, mirror: true });
 const C = (d) => ({ d, mirror: false });
 
+// Silueta femenina estilizada: hombros más estrechos, cintura marcada, cadera y muslos con curva.
+// Trazado propio en una cuadrícula 200 x 400; cada mitad se refleja.
 const BASE_HALF = [
-  'M100 58 L92 58 Q76 59 62 68 Q52 74 52 90 L56 130 Q58 160 62 190 L64 198 L100 202 Z',           // torso
-  'M54 70 Q42 74 40 90 L37 136 Q37 146 46 146 L55 146 Q59 140 59 132 L62 92 Q62 76 54 70 Z',       // brazo
-  'M38 148 L33 198 Q33 206 41 206 L50 204 Q54 200 54 194 L56 148 Z',                                // antebrazo
-  'M64 198 L100 202 L99 292 Q84 298 70 292 L62 238 Q60 216 64 198 Z',                               // muslo
-  'M71 298 Q85 302 97 298 L93 374 Q92 386 86 386 L77 386 Q72 386 72 374 Z',                         // pierna
-  'M63 186 L100 186 L100 208 L62 208 Z',                                                            // pelvis (sin costuras)
-  'M69 286 L99 286 L97 304 L71 304 Z',                                                              // rodilla
-  'M44 140 L56 140 L55 152 L42 152 Z',                                                              // codo
+  // tronco + pierna (una sola forma continua, sin costuras)
+  'M100 57 L93 58 Q80 61 70 66 Q63 69 62 77 L65 104 Q69 126 73 146 Q75 158 72 170 Q63 184 62 202 Q61 232 65 262 Q67 280 69 292 Q68 322 71 350 Q72 372 73 383 L87 383 Q89 346 92 304 Q95 276 97 246 Q99 230 100 216 Z',
+  // brazo completo (hombro, codo, mano)
+  'M62 74 Q53 77 51 90 Q49 112 47 136 Q45 160 41 188 Q38 202 40 214 Q46 220 51 213 Q55 196 58 172 Q61 150 63 128 Q66 112 67 100 Z',
 ];
 
-const DELT = 'M52 72 Q58 66 65 70 L66 98 Q58 102 53 98 Q49 86 52 72 Z';
-const ARM = 'M44 106 Q51 102 57 106 L57 136 Q50 140 44 136 Z';
+const DELT = 'M62 75 Q54 78 52 90 Q51 100 56 106 Q63 100 66 88 Q66 79 62 75 Z';
+const ARM_F = 'M54 108 Q51 122 50 136 Q56 140 60 134 Q61 120 61 108 Q58 104 54 108 Z';
+const ARM_B = 'M54 108 Q51 122 50 136 Q56 140 60 134 Q61 120 61 108 Q58 104 54 108 Z';
 
 export const ZONES = {
   front: {
-    pecho: [H('M64 74 Q80 66 99 72 L99 108 Q82 114 66 106 Z')],
+    pecho: [H('M99 78 Q86 73 73 80 Q69 90 74 100 Q86 108 99 103 Z')],
     hombros: [H(DELT)],
-    biceps: [H(ARM)],
-    abdomen: [C('M78 114 L122 114 L121 182 Q100 190 79 182 Z')],
-    cuadriceps: [H('M67 206 L88 206 Q86 240 90 280 Q80 284 74 280 L66 238 Q65 220 67 206 Z')],
-    aductores: [H('M88 206 L99 204 L98 268 Q93 274 90 280 Q86 240 88 206 Z')],
+    biceps: [H(ARM_F)],
+    abdomen: [C('M88 112 Q100 109 112 112 Q114 140 111 162 Q100 168 89 162 Q86 140 88 112 Z')],
+    cuadriceps: [H('M68 212 Q64 240 69 278 Q80 285 90 278 Q93 250 91 218 Q80 207 68 212 Z')],
+    aductores: [H('M92 222 Q98 244 98 262 Q95 275 91 280 Q94 252 92 222 Z')],
   },
   back: {
-    espalda: [C('M64 68 Q100 60 136 68 L133 118 Q128 152 118 170 L82 170 Q72 152 67 118 Z')],
+    espalda: [H('M99 60 Q82 63 70 73 Q66 98 71 126 Q84 146 99 151 Z')],
     hombros: [H(DELT)],
-    triceps: [H(ARM)],
-    gluteos: [H('M68 180 Q84 174 99 182 L99 216 Q80 226 66 212 Q62 194 68 180 Z')],
-    abductores: [H('M56 178 Q62 174 67 180 Q62 196 66 212 L60 216 Q53 196 56 178 Z')],
-    isquios: [H('M66 228 L98 228 L96 290 Q84 296 72 290 L63 244 Q62 234 66 228 Z')],
-    gemelos: [H('M72 300 Q84 304 96 300 L93 352 Q84 358 76 352 Z')],
+    triceps: [H(ARM_B)],
+    gluteos: [H('M99 178 Q82 172 68 184 Q61 200 69 217 Q84 226 99 219 Z')],
+    abductores: [H('M62 186 Q58 202 63 218 Q67 213 68 198 Q67 190 62 186 Z')],
+    isquios: [H('M70 226 Q66 252 70 284 Q82 291 93 284 Q96 255 94 228 Q82 222 70 226 Z')],
+    gemelos: [H('M72 300 Q68 326 74 352 Q82 358 90 350 Q94 322 88 301 Q80 296 72 300 Z')],
   },
 };
 
@@ -54,8 +53,8 @@ const shapes = (items, cls, extra = '') => items.map(s =>
  */
 export function bodyView(view, { selected = new Set(), interactive = false, label = true, crop = null } = {}) {
   const base = BASE_HALF.map(d => `<path class="b-base" d="${d}"/><path class="b-base" d="${d}" ${mirrorAttr}/>`).join('');
-  const head = '<ellipse class="b-base" cx="100" cy="28" rx="16" ry="20"/><rect class="b-base" x="92" y="44" width="16" height="16" rx="4"/>';
-  const feet = '<ellipse class="b-base" cx="82" cy="392" rx="11" ry="5"/><ellipse class="b-base" cx="118" cy="392" rx="11" ry="5"/>';
+  const head = '<ellipse class="b-base" cx="100" cy="27" rx="14" ry="19"/><path class="b-base" d="M94 42 L106 42 L108 60 L92 60 Z"/>';
+  const feet = '<path class="b-base" d="M73 382 Q71 391 77 392 L88 392 Q90 387 87 382 Z"/><path class="b-base" d="M127 382 Q129 391 123 392 L112 392 Q110 387 113 382 Z"/>';
   const zones = Object.entries(ZONES[view]).map(([m, items]) => {
     const on = selected.has(m);
     if (!interactive && !on) return '';
@@ -73,7 +72,9 @@ export function bodyPair(opts) {
 // Miniatura: una sola vista, la del primer músculo principal.
 export function thumb(muscles) {
   const view = VIEW_OF[muscles?.[0]] || 'front';
-  const lower = ['gluteos', 'cuadriceps', 'isquios', 'aductores', 'abductores', 'gemelos'].includes(muscles?.[0]);
-  const crop = lower ? '28 168 144 226' : '24 40 152 170';
+  const m0 = muscles?.[0];
+  const crop = m0 === 'gemelos' ? '44 262 112 142'
+    : ['gluteos', 'cuadriceps', 'isquios', 'aductores', 'abductores'].includes(m0) ? '44 168 112 142'
+    : '38 52 124 158';
   return `<div class="thumb">${bodyView(view, { selected: new Set(muscles), label: false, crop })}</div>`;
 }
