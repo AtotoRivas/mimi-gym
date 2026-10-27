@@ -1,6 +1,6 @@
 {
- "version": "757c2871e8",
- "builtAt": "2026-10-27T12:00:47.753Z",
+ "version": "9d00c4e738",
+ "builtAt": "2026-10-27T13:31:55.858Z",
  "shell": [
   {
    "url": "./",
@@ -8,7 +8,7 @@
   },
   {
    "url": "css/app.css",
-   "bytes": 19568
+   "bytes": 22782
   },
   {
    "url": "favicon.ico",
@@ -64,7 +64,7 @@
   },
   {
    "url": "js/app.js",
-   "bytes": 58844
+   "bytes": 68754
   },
   {
    "url": "js/body.js",
@@ -72,7 +72,7 @@
   },
   {
    "url": "js/catalog.js",
-   "bytes": 13011
+   "bytes": 13341
   },
   {
    "url": "js/db.js",
@@ -83,8 +83,12 @@
    "bytes": 3936
   },
   {
+   "url": "js/photos.js",
+   "bytes": 2048
+  },
+  {
    "url": "js/store.js",
-   "bytes": 16372
+   "bytes": 18851
   },
   {
    "url": "manifest.webmanifest",
@@ -92,7 +96,7 @@
   },
   {
    "url": "media/manifest.json",
-   "bytes": 16
+   "bytes": 3136
   },
   {
    "url": "asset-list.json",

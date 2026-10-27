@@ -1,3 +1,139 @@
 {
- "clips": {}
+ "clips": {
+  "abductores": {
+   "validated": false,
+   "poster": "media/abductores.jpg",
+   "posterBytes": 44321
+  },
+  "aductores": {
+   "validated": false,
+   "poster": "media/aductores.jpg",
+   "posterBytes": 43508
+  },
+  "curl-biceps-mancuernas": {
+   "validated": false,
+   "poster": "media/curl-biceps-mancuernas.jpg",
+   "posterBytes": 22157
+  },
+  "curl-biceps-maquina": {
+   "validated": false,
+   "poster": "media/curl-biceps-maquina.jpg",
+   "posterBytes": 26277
+  },
+  "curl-biceps-polea": {
+   "validated": false,
+   "poster": "media/curl-biceps-polea.jpg",
+   "posterBytes": 17907
+  },
+  "curl-femoral-sentada": {
+   "validated": false,
+   "poster": "media/curl-femoral-sentada.jpg",
+   "posterBytes": 28968
+  },
+  "curl-femoral": {
+   "validated": false,
+   "poster": "media/curl-femoral.jpg",
+   "posterBytes": 43274
+  },
+  "elevaciones-laterales": {
+   "validated": false,
+   "poster": "media/elevaciones-laterales.jpg",
+   "posterBytes": 23633
+  },
+  "ext-cuadriceps": {
+   "validated": false,
+   "poster": "media/ext-cuadriceps.jpg",
+   "posterBytes": 44041
+  },
+  "face-pull": {
+   "validated": false,
+   "poster": "media/face-pull.jpg",
+   "posterBytes": 23733
+  },
+  "gemelos-sentada": {
+   "validated": false,
+   "poster": "media/gemelos-sentada.jpg",
+   "posterBytes": 25093
+  },
+  "gluteo-maquina": {
+   "validated": false,
+   "poster": "media/gluteo-maquina.jpg",
+   "posterBytes": 44259
+  },
+  "hip-thrust-banco": {
+   "validated": false,
+   "poster": "media/hip-thrust-banco.jpg",
+   "posterBytes": 27374
+  },
+  "hip-thrust": {
+   "validated": false,
+   "poster": "media/hip-thrust.jpg",
+   "posterBytes": 29726
+  },
+  "jalon-pecho": {
+   "validated": false,
+   "poster": "media/jalon-pecho.jpg",
+   "posterBytes": 45146
+  },
+  "pec-deck": {
+   "validated": false,
+   "poster": "media/pec-deck.jpg",
+   "posterBytes": 44082
+  },
+  "peso-muerto-rumano": {
+   "validated": false,
+   "poster": "media/peso-muerto-rumano.jpg",
+   "posterBytes": 27128
+  },
+  "prensa": {
+   "validated": false,
+   "poster": "media/prensa.jpg",
+   "posterBytes": 47699
+  },
+  "press-banca-mancuernas": {
+   "validated": false,
+   "poster": "media/press-banca-mancuernas.jpg",
+   "posterBytes": 24711
+  },
+  "press-hombros-mancuernas": {
+   "validated": false,
+   "poster": "media/press-hombros-mancuernas.jpg",
+   "posterBytes": 23933
+  },
+  "press-hombros": {
+   "validated": false,
+   "poster": "media/press-hombros.jpg",
+   "posterBytes": 26807
+  },
+  "press-pecho": {
+   "validated": false,
+   "poster": "media/press-pecho.jpg",
+   "posterBytes": 43500
+  },
+  "remo-mancuerna": {
+   "validated": false,
+   "poster": "media/remo-mancuerna.jpg",
+   "posterBytes": 25608
+  },
+  "remo-sentado": {
+   "validated": false,
+   "poster": "media/remo-sentado.jpg",
+   "posterBytes": 43199
+  },
+  "sentadilla-goblet": {
+   "validated": false,
+   "poster": "media/sentadilla-goblet.jpg",
+   "posterBytes": 23935
+  },
+  "triceps-polea": {
+   "validated": false,
+   "poster": "media/triceps-polea.jpg",
+   "posterBytes": 22890
+  },
+  "zancadas": {
+   "validated": false,
+   "poster": "media/zancadas.jpg",
+   "posterBytes": 21755
+  }
+ }
 }

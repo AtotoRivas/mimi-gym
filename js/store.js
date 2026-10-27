@@ -1,5 +1,5 @@
 // Lógica de datos de Mimi Gym. Independiente del DOM: se puede probar en Node.
-import { BASE_EXERCISES, DEFAULT_ROUTINES, DEFAULT_SETTINGS, LEG_MUSCLES } from './catalog.js';
+import { BASE_EXERCISES, DEFAULT_ROUTINES, DEFAULT_SETTINGS, LEG_MUSCLES, MUSCLES } from './catalog.js';
 
 export const BACKUP_VERSION = 1;
 const TZ = 'Europe/Madrid';
@@ -33,10 +33,11 @@ export class Store {
     await this.db.open();
     this.custom = await this.db.getAll('customExercises');
     let routines = await this.db.getAll('routines');
-    if (!routines.length) {
-      routines = DEFAULT_ROUTINES.map((r, i) => ({ ...r, order: i }));
-      await this.db.putMany('routines', routines);
-    }
+    // Rutinas que aún no existen en este dispositivo (instalación nueva, o D/E llegando a una app que ya tenía A/B/C).
+    // Sólo se AÑADEN: las que ya existen no se tocan, así se conservan los cambios de Mimi.
+    const have = new Set(routines.map(r => r.id));
+    const missing = DEFAULT_ROUTINES.map((r, i) => ({ ...r, exerciseIds: [...r.exerciseIds], order: i })).filter(r => !have.has(r.id));
+    if (missing.length) { await this.db.putMany('routines', missing); routines = [...routines, ...missing]; }
     this.routines = routines.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     const rows = await this.db.getAll('settings');
     this.settings = { ...DEFAULT_SETTINGS };
@@ -49,38 +50,59 @@ export class Store {
   exercise(id) { return this.exercises().find(e => e.id === id) || null; }
   exerciseByName(name) { const n = norm(name); return this.exercises().find(e => norm(e.name) === n) || null; }
   exerciseRoutines(id) { return this.routines.filter(r => r.exerciseIds.includes(id)).map(r => r.id); }
-  verifiedIds() { return new Set(this.settings.verifiedMachines || []); }
 
-  async addCustomExercise({ name, machine = '', primary = [], step = 2.5 }) {
-    name = String(name || '').trim();
+  /* Ejercicios propios (desde Ajustes o desde la cámara, con fotos). */
+  static cleanExercise({ name, machine = '', primary = [], secondary = [], cues = [], photos, step }) {
+    const ok = new Set(MUSCLES.filter(m => !m.group).map(m => m.id));
+    name = String(name || '').trim().slice(0, 80);
     if (!name) throw new Error('El ejercicio necesita un nombre');
-    const ex = { id: 'c-' + uid(), name, machine: machine.trim(), primary, secondary: [], step, cues: [], custom: true };
+    const prim = [...new Set((primary || []).filter(m => ok.has(m)))];
+    const out = { name, machine: String(machine || '').trim().slice(0, 80), primary: prim,
+      secondary: [...new Set((secondary || []).filter(m => ok.has(m) && !prim.includes(m)))],
+      cues: (cues || []).map(c => String(c || '').trim().slice(0, 200)).filter(Boolean).slice(0, 5) };
+    if (photos !== undefined) out.photos = (photos || []).filter(p => typeof p === 'string' && p.startsWith('data:image/')).slice(0, 3);
+    if (step !== undefined) out.step = step === 5 ? 5 : 2.5;
+    return out;
+  }
+  async addCustomExercise(data) {
+    const c = Store.cleanExercise(data);
+    const dup = this.exerciseByName(c.name);
+    if (dup) throw Object.assign(new Error(`Ya existe «${dup.name}»`), { existingId: dup.id });
+    const ex = { id: 'c-' + uid(), step: 2.5, photos: [], ...c, custom: true, createdAt: Date.now() };
     await this.db.put('customExercises', ex);
     this.custom.push(ex);
     return ex;
   }
+  async updateCustomExercise(id, patch) {
+    const ex = this.custom.find(e => e.id === id); if (!ex) throw new Error('Sólo se pueden editar tus ejercicios');
+    const c = Store.cleanExercise({ ...ex, ...patch });
+    const dup = this.exerciseByName(c.name); if (dup && dup.id !== id) throw new Error(`Ya existe «${dup.name}»`);
+    Object.assign(ex, c, { editedAt: Date.now() });
+    await this.db.put('customExercises', ex);
+    return ex;
+  }
+  // No se borra un ejercicio con historial: los registros se quedarían sin nombre.
+  async deleteCustomExercise(id) {
+    if (!this.custom.some(e => e.id === id)) throw new Error('Sólo se pueden borrar tus ejercicios');
+    if ((await this.logsForExercise(id)).length) throw new Error('Tiene registros guardados: no se puede borrar sin perder historial');
+    for (const r of this.routines.filter(r => r.exerciseIds.includes(id))) await this.removeFromRoutine(r.id, id);
+    await this.db.delete('customExercises', id);
+    this.custom = this.custom.filter(e => e.id !== id);
+  }
 
-  filterExercises({ query = '', muscles = [], routineId = null, onlyVerified = false } = {}) {
+  filterExercises({ query = '', muscles = [], routineId = null } = {}) {
     const q = norm(query);
-    const verified = this.verifiedIds();
     const wanted = new Set(muscles.flatMap(m => (m === 'piernas' ? LEG_MUSCLES : [m])));
     return this.exercises().filter(e => {
       if (q && !(norm(e.name).includes(q) || norm(e.machine).includes(q))) return false;
       if (wanted.size && !e.primary.some(m => wanted.has(m))) return false; // sólo correspondencias reales (músculo principal)
       if (routineId && !this.exerciseRoutines(e.id).includes(routineId)) return false;
-      if (onlyVerified && !verified.has(e.id)) return false;
       return true;
     });
   }
 
   /* ---------- Ajustes ---------- */
   async setSetting(key, value) { this.settings[key] = value; await this.db.put('settings', { key, value }); }
-  async toggleVerified(exId) {
-    const set = this.verifiedIds();
-    set.has(exId) ? set.delete(exId) : set.add(exId);
-    await this.setSetting('verifiedMachines', [...set]);
-    return set.has(exId);
-  }
 
   /* ---------- Rutinas (editables; no tocan catálogo ni historial) ---------- */
   routine(id) { return this.routines.find(r => r.id === id) || null; }
@@ -99,7 +121,7 @@ export class Store {
     [ids[i], ids[j]] = [ids[j], ids[i]];
     return this.setRoutineExercises(id, ids);
   }
-  async resetRoutine(id) { const d = DEFAULT_ROUTINES.find(r => r.id === id); return this.setRoutineExercises(id, d.exerciseIds); }
+  async resetRoutine(id) { const d = DEFAULT_ROUTINES.find(r => r.id === id); if (!d) throw new Error('Rutina desconocida'); return this.setRoutineExercises(id, d.exerciseIds); }
 
   /* ---------- Registros ---------- */
   async saveLog({ exerciseId, sets, date = dateKey(), routineId = null, sessionId = null }) {
@@ -130,6 +152,14 @@ export class Store {
     const sid = logs[0].sessionId;
     const group = logs.filter(l => l.sessionId === sid).sort((a, b) => a.ts - b.ts);
     return { sessionId: sid, date: group[0].date, routineId: group.find(l => l.routineId)?.routineId || null, logs: group };
+  }
+
+  // Último día entrenado: TODOS los ejercicios de esa fecha (aunque vengan de varias sesiones), en orden de guardado.
+  async lastDay() {
+    const logs = await this.allLogs(); if (!logs.length) return null;
+    const date = logs.reduce((m, l) => (l.date > m ? l.date : m), logs[0].date);
+    const day = logs.filter(l => l.date === date).sort((a, b) => a.ts - b.ts);
+    return { date, logs: day, routineIds: [...new Set(day.map(l => l.routineId).filter(Boolean))] };
   }
 
   /* ---------- Calendario y planificación ---------- */

@@ -93,7 +93,7 @@ input, select, textarea { font: inherit; color: var(--green); }
 
 /* Hoy */
 .hero { position: relative; overflow: hidden; border-radius: 22px; padding: 22px 20px 18px; margin: 14px 0 6px; background: #E3E7DC; min-height: 210px; display: flex; flex-direction: column; justify-content: flex-end; }
-.hero.t-B { background: #E9E1D5; } .hero.t-C { background: #E4E1DA; }
+.hero.t-B { background: #E9E1D5; } .hero.t-C { background: #E4E1DA; } .hero.t-D { background: #DCE2DC; } .hero.t-E { background: #EFE9DE; }
 .hero .letter { position: absolute; right: -6px; top: -34px; font-family: var(--serif); font-size: 190px; line-height: 1; color: rgba(38, 63, 53, .08); pointer-events: none; }
 .hero h2 { font-size: 34px; line-height: 1.1; margin: 2px 0 4px; }
 .hero .lead { font-size: 14px; color: var(--taupe-text); }
@@ -117,7 +117,8 @@ input, select, textarea { font: inherit; color: var(--green); }
 
 /* Tarjetas de rutina */
 .rcard { position: relative; overflow: hidden; display: block; width: 100%; text-align: left; border-radius: 20px; padding: 20px; min-height: 132px; margin-bottom: 12px; background: #E3E7DC; }
-.rcard.t-B { background: #E9E1D5; } .rcard.t-C { background: #E4E1DA; }
+.rcard.t-B { background: #E9E1D5; } .rcard.t-C { background: #E4E1DA; } .rcard.t-D { background: #DCE2DC; }
+.rcard.t-E { background: transparent; border: 1.5px dashed var(--sage); }
 .rcard .letter { position: absolute; right: 10px; top: -22px; font-family: var(--serif); font-size: 130px; color: rgba(38, 63, 53, .09); line-height: 1; }
 .rcard h3 { font-size: 24px; margin-top: 30px; }
 .rcard .lead { font-size: 13px; color: var(--taupe-text); }
@@ -223,3 +224,38 @@ textarea.field-text { height: 110px; padding: 10px 12px; font-size: 13px; }
 .pill.ok { background: var(--sage-soft); color: var(--green); }
 @media (min-width: 640px) { #view { max-width: 560px; width: 100%; margin: 0 auto; } #tabs { max-width: 560px; left: 50%; transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* Selector de rutina en Hoy: color por rutina */
+.pick .ltr.t-B { background: #E9E1D5; } .pick .ltr.t-C { background: #E4E1DA; } .pick .ltr.t-D { background: #DCE2DC; } .pick .ltr.t-E { background: transparent; border: 1.5px dashed var(--sage); }
+
+/* Último entrenamiento (todos los ejercicios del día) */
+.lastday { padding: 4px 16px 6px; }
+.lastday .ld-head { padding: 12px 0; min-height: 56px; }
+.ld-ex { display: block; padding: 10px 0; border-top: 1px solid var(--line); }
+.ld-ex b { display: block; font-size: 15px; font-weight: 600; }
+.ld-ex span { display: block; font-size: 13px; color: var(--taupe-text); margin-top: 2px; }
+
+/* Cámara: ¿qué máquina es? */
+.cam-btn { background: var(--green); color: var(--cream); border-radius: 50%; }
+.cam-btn:active { background: var(--green-2); }
+.photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 6px; }
+.photo-tile { position: relative; aspect-ratio: 3 / 4; border-radius: 14px; overflow: hidden; background: #ECE8DF; }
+.photo-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-tile .rm { position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; border-radius: 50%; background: rgba(251, 248, 242, .92); color: var(--green); font-size: 20px; line-height: 1; }
+.photo-tile.add { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; cursor: pointer; border: 1.5px dashed var(--sage); background: transparent; color: var(--green); font-size: 13px; text-align: center; padding: 6px; }
+.photo-tile.add.alt { border-style: dotted; color: var(--taupe-text); }
+.spinner { width: 34px; height: 34px; margin: 0 auto 12px; border-radius: 50%; border: 3px solid var(--sage-soft); border-top-color: var(--green); animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
+.lbl { display: block; font-size: 13px; color: var(--taupe-text); margin: 14px 0 6px; }
+.chips.wrap { flex-wrap: wrap; overflow: visible; margin: 0; padding: 0; }
+.thumb img { width: 100%; height: 100%; object-fit: cover; }
+/* Imagen de ejercicio entera (sin cortar cabeza ni pies) sobre un fondo difuminado de sí misma */
+.media.pic img.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: blur(18px) saturate(.85); transform: scale(1.2); opacity: .8; }
+.media.pic img.fg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+#photo { cursor: pointer; }
+.thumb.has-img { position: relative; width: 56px; }
+.thumb.has-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+#fxCues, #exCues, .field-text { font-size: 16px; }
+/* Con 5 rutinas el selector de Hoy se compacta para que el último entrenamiento quede a la vista */
+.pick-grid { gap: 8px; } .pick-grid .pick { min-height: 56px; padding: 9px 14px; } .pick-grid .pick .ltr { width: 34px; height: 34px; font-size: 16px; }

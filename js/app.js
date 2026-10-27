@@ -3,6 +3,7 @@ import { IdbAdapter } from './db.js';
 import { MUSCLES, muscleLabel } from './catalog.js';
 import { bodyPair, thumb } from './body.js';
 import * as offline from './offline.js';
+import { findMatches, shrinkPhoto } from './photos.js';
 
 const store = new Store(new IdbAdapter());
 const view = document.getElementById('view');
@@ -24,6 +25,14 @@ const newSid = () => 's' + Date.now().toString(36) + Math.random().toString(36).
 const normS = s => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 const machineOf = e => (e.machine && normS(e.machine) !== normS(e.name) ? e.machine : '');
 const plural = (n, a, b) => `${n} ${n === 1 ? a : b}`;
+// "3 series · 40 kg × 10" si todas iguales; si no, cada serie en corto.
+const setsSummary = sets => { const same = sets.every(x => x.kg === sets[0].kg && x.reps === sets[0].reps);
+  return plural(sets.length, 'serie', 'series') + ' · ' + (same ? `${fmt(sets[0].kg)} kg × ${sets[0].reps}` : sets.map(x => `${fmt(x.kg)}×${x.reps}`).join(' · ')); };
+// Rutina vacía (p. ej. Personalizada recién instalada): en vez de una sesión vacía, se abre la rutina para armarla.
+const startRoutine = (id, extra = '') => { const r = store.routine(id); go(r && !r.exerciseIds.length ? `#/rutina/${id}` : `#/sesion/${id}/${newSid()}${extra}`); };
+const imgOf = e => e.photos?.[0] || clipsCache?.[e.id]?.poster || '';
+const exThumb = e => { const src = imgOf(e); const base = thumb(e.primary); return src ? base.replace('<div class="thumb">', `<div class="thumb has-img"><img src="${esc(src)}" alt="" loading="lazy" onerror="this.remove()">`) : base; };
+const muscleChips = sel => `<div class="chips wrap">${MUSCLES.filter(m => !m.group).map(m => `<button type="button" class="chip ${sel.has(m.id) ? 'on' : ''}" data-mus="${m.id}">${esc(m.label)}</button>`).join('')}</div>`;
 
 const I = {
   chev: '<svg class="chev" width="18" height="18" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>',
@@ -36,6 +45,7 @@ const I = {
   down: '<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>',
   swap: '<svg viewBox="0 0 24 24"><path d="M7 7h12l-3-3M17 17H5l3 3"/></svg>',
   play: '<svg width="26" height="26" viewBox="0 0 24 24" fill="#263F35"><path d="M8 5.5v13l11-6.5z"/></svg>',
+  cam: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.6"/></svg>',
   cal: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/></svg>',
 };
 
@@ -64,7 +74,7 @@ function pickExercise({ title = 'Elegir ejercicio', exclude = [] } = {}) {
     let q = '';
     const list = () => {
       const items = store.filterExercises({ query: q }).filter(e => !exclude.includes(e.id));
-      return items.length ? items.map(e => `<button class="list-item" data-pick="${esc(e.id)}">${thumb(e.primary)}<div class="grow"><div class="t">${esc(e.name)}</div><div class="s">${esc(e.primary.map(muscleLabel).join(' · '))}</div></div></button>`).join('') : '<div class="empty">Nada con ese nombre</div>';
+      return items.length ? items.map(e => `<button class="list-item" data-pick="${esc(e.id)}">${exThumb(e)}<div class="grow"><div class="t">${esc(e.name)}</div><div class="s">${esc(e.primary.map(muscleLabel).join(' · '))}</div></div></button>`).join('') : '<div class="empty">Nada con ese nombre</div>';
     };
     const sheet = openSheet(`<h3>${esc(title)}</h3><div class="search">${I.search}<input id="pq" type="search" placeholder="Buscar ejercicio o máquina" autocomplete="off"></div><div id="pl">${list()}</div><div class="spacer"></div><button class="btn btn-ghost" data-close>Cancelar</button>`, e => {
       const p = e.target.closest('[data-pick]'); if (p) { closeSheet(); resolve(p.dataset.pick); }
@@ -91,6 +101,7 @@ const routes = [
   [/^\/calendario$/, 'calendario', renderCalendario],
   [/^\/dia\/(\d{4}-\d{2}-\d{2})$/, 'calendario', renderDia],
   [/^\/ajustes$/, null, renderAjustes],
+  [/^\/escanear$/, 'hoy', renderEscanear],
 ];
 const TOP = new Set(['/hoy', '/rutinas', '/ejercicios', '/calendario']);
 let token = 0, cleanup = null;
@@ -130,7 +141,7 @@ $('#backBtn').onclick = () => {
   const { path, q } = parseHash();
   if (history.length > 1 && document.referrer !== undefined && sessionStorage.getItem('navDepth') > 0) return history.back();
   const parent = path.startsWith('/entrenar') ? (q.get('sid') ? `#/sesion/${q.get('r') || '_'}/${q.get('sid')}` : '#/ejercicios')
-    : path.startsWith('/rutina/') ? '#/rutinas' : path.startsWith('/dia/') ? '#/calendario' : path.startsWith('/sesion') ? '#/hoy' : path.startsWith('/ejercicio/') ? '#/ejercicios' : '#/hoy';
+    : path.startsWith('/rutina/') ? '#/rutinas' : path.startsWith('/escanear') ? '#/hoy' : path.startsWith('/dia/') ? '#/calendario' : path.startsWith('/sesion') ? '#/hoy' : path.startsWith('/ejercicio/') ? '#/ejercicios' : '#/hoy';
   go(parent);
 };
 $('#menuBtn').onclick = () => go('#/ajustes');
@@ -145,26 +156,30 @@ async function renderHoy() {
   const plan = (await store.plans())[today];
   const trained = await store.trainedDates();
   const plans = await store.plans();
-  const last = await store.lastSession();
+  const last = await store.lastDay();
   const visits = await store.weekVisits(today);
   const start = weekStart(today);
   const dots = DOW.map((l, i) => { const d = addDays(start, i); const st = trained.has(d) ? 'trained' : plans[d] ? 'planned' : ''; return `<div class="dot ${st} ${d === today ? 'today' : ''}"><i>${st === 'trained' ? I.check : Number(d.slice(8))}</i><span>${l}</span></div>`; }).join('');
   const showLegacy = legacyRaw() && !store.settings.legacyImported && !store.settings.legacyDismissed;
   const legacyBanner = showLegacy ? `<div class="card last-box" style="margin-top:12px"><b>Datos de la versión anterior</b><p class="small muted" style="margin:4px 0 10px">He encontrado entrenamientos guardados por la V2.2 en este dispositivo. Revísalos antes de importarlos.</p><div class="row"><button class="btn btn-secondary btn-sm" data-legacy-go>Revisar</button><button class="btn btn-ghost btn-sm" data-legacy-no>Ahora no</button></div></div>` : '';
   const r = plan ? store.routine(plan.routineId) : null;
-  const hero = r ? `<section class="hero t-${esc(r.id)}"><div class="letter">${esc(r.id)}</div><div class="lead">Hoy toca</div><h2>${esc(r.short)}</h2><div class="lead">${plural(r.exerciseIds.length, 'ejercicio', 'ejercicios')}</div><button class="btn btn-primary" data-start="${esc(r.id)}">Empezar entrenamiento ${I.arrow}</button></section>`
-    : `<div class="eyebrow">¿Qué toca hoy?</div><div class="pick-grid">${store.routines.map(x => `<button class="pick" data-start="${esc(x.id)}"><span class="ltr">${esc(x.id)}</span><span class="grow"><b>${esc(x.name)}</b><br><span class="small muted">${plural(x.exerciseIds.length, 'ejercicio', 'ejercicios')}</span></span>${I.chev}</button>`).join('')}</div>`;
-  const lastR = last && last.routineId ? store.routine(last.routineId) : null;
-  const lastTitle = last ? (lastR ? lastR.short : last.logs.length === 1 ? (store.exercise(last.logs[0].exerciseId)?.name || 'Ejercicio') : 'Entrenamiento libre') : '';
+  const count = x => x.exerciseIds.length ? plural(x.exerciseIds.length, 'ejercicio', 'ejercicios') : 'Sin ejercicios todavía';
+  const hero = r ? `<section class="hero t-${esc(r.id)}"><div class="letter">${esc(r.id)}</div><div class="lead">Hoy toca</div><h2>${esc(r.short)}</h2><div class="lead">${count(r)}</div><button class="btn btn-primary" data-start="${esc(r.id)}">${r.exerciseIds.length ? `Empezar entrenamiento ${I.arrow}` : 'Elegir ejercicios'}</button></section>`
+    : `<div class="eyebrow">¿Qué toca hoy?</div><div class="pick-grid">${store.routines.map(x => `<button class="pick" data-start="${esc(x.id)}"><span class="ltr t-${esc(x.id)}">${esc(x.id)}</span><span class="grow"><b>${esc(x.name)}</b><br><span class="small muted">${count(x)}</span></span>${I.chev}</button>`).join('')}</div>`;
+  const lastTitle = last ? (last.routineIds.length ? last.routineIds.map(id => store.routine(id)?.short || id).join(' · ') : last.logs.length === 1 ? (store.exercise(last.logs[0].exerciseId)?.name || 'Ejercicio') : 'Entrenamiento libre') : '';
+  const lastBox = last ? `<div class="eyebrow">Último entrenamiento</div><div class="card lastday">
+      <a class="row ld-head" href="#/dia/${last.date}"><div class="grow"><b>${esc(lastTitle)}</b><div class="small muted">${esc(fLong(last.date))} · ${plural(last.logs.length, 'ejercicio', 'ejercicios')}</div></div>${I.chev}</a>
+      ${last.logs.map(l => `<a class="ld-ex" href="#/ejercicio/${esc(l.exerciseId)}"><b>${esc(store.exercise(l.exerciseId)?.name || 'Ejercicio')}</b><span>${esc(setsSummary(l.sets))}</span></a>`).join('')}</div>`
+    : `<p class="sub center" style="margin-top:26px">Cuando guardes tu primer entrenamiento aparecerá aquí.</p>`;
   view.innerHTML = `
-    <div class="row" style="margin-top:6px"><div class="grow"><h1 class="page-title">Hola, Mimi</h1><div class="sub" style="margin:0">${esc(fLong(today))}</div></div><a href="#/calendario" class="icon-btn" aria-label="Calendario">${I.cal}</a></div>
+    <div class="row" style="margin-top:6px"><div class="grow"><h1 class="page-title">Hola, Mimi</h1><div class="sub" style="margin:0">${esc(fLong(today))}</div></div><a href="#/escanear" class="icon-btn cam-btn" aria-label="¿Qué máquina es? Hacer foto">${I.cam}</a></div>
     ${legacyBanner}
     ${hero}
     <div class="eyebrow">Esta semana${visits ? ` · ${plural(visits, 'día entrenado', 'días entrenados')}` : ''}</div>
     <div class="week-dots">${dots}</div>
-    ${last ? `<div class="eyebrow">Último entrenamiento</div><a class="list-item" href="#/dia/${last.date}"><div class="grow"><div class="t">${esc(lastTitle)}</div><div class="s">${esc(fLong(last.date))} · ${plural(last.logs.length, 'ejercicio', 'ejercicios')}</div></div>${I.chev}</a>` : `<p class="sub center" style="margin-top:26px">Cuando guardes tu primer entrenamiento aparecerá aquí.</p>`}`;
+    ${lastBox}`;
   view.onclick = async e => {
-    const b = e.target.closest('[data-start]'); if (b) return go(`#/sesion/${b.dataset.start}/${newSid()}`);
+    const b = e.target.closest('[data-start]'); if (b) return startRoutine(b.dataset.start);
     if (e.target.closest('[data-legacy-go]')) return legacyReview(legacyRaw(), renderHoy);
     if (e.target.closest('[data-legacy-no]')) { await store.setSetting('legacyDismissed', true); renderHoy(); }
   };
@@ -172,19 +187,19 @@ async function renderHoy() {
 
 /* ---------- RUTINAS ---------- */
 async function renderRutinas() {
-  view.innerHTML = `<h1 class="page-title">Rutinas</h1><p class="sub">Tres rutinas base. Cámbialas a tu gusto.</p>` + store.routines.map(r => `
-    <a class="rcard t-${esc(r.id)}" href="#/rutina/${esc(r.id)}"><div class="letter">${esc(r.id)}</div><h3>${esc(r.short)}</h3><div class="lead">${plural(r.exerciseIds.length, 'ejercicio', 'ejercicios')}</div></a>`).join('');
+  view.innerHTML = `<h1 class="page-title">Rutinas</h1><p class="sub">Cámbialas a tu gusto. La última es toda tuya: elige qué entrenar.</p>` + store.routines.map(r => `
+    <a class="rcard t-${esc(r.id)}" href="#/rutina/${esc(r.id)}"><div class="letter">${esc(r.id)}</div><h3>${esc(r.short)}</h3><div class="lead">${r.exerciseIds.length ? plural(r.exerciseIds.length, 'ejercicio', 'ejercicios') : 'Vacía · tócala para armarla'}</div></a>`).join('');
 }
 
 async function renderRutina(id) {
   const r = store.routine(id); if (!r) return replace('#/rutinas');
   const draw = () => {
     view.innerHTML = `<h1 class="page-title">${esc(r.name)}</h1><p class="sub">${plural(r.exerciseIds.length, 'ejercicio', 'ejercicios')} · puedes añadir, quitar, cambiar y reordenar</p>
-      ${r.exerciseIds.map((eid, i) => { const e = store.exercise(eid); if (!e) return ''; return `<div class="list-item" data-eid="${esc(eid)}"><a class="row grow" href="#/ejercicio/${esc(eid)}" style="min-width:0">${thumb(e.primary)}<div class="grow"><div class="t">${esc(e.name)}</div><div class="s">${esc(e.primary.map(muscleLabel).join(' · '))}</div></div></a>
+      ${r.exerciseIds.map((eid, i) => { const e = store.exercise(eid); if (!e) return ''; return `<div class="list-item" data-eid="${esc(eid)}"><a class="row grow" href="#/ejercicio/${esc(eid)}" style="min-width:0">${exThumb(e)}<div class="grow"><div class="t">${esc(e.name)}</div><div class="s">${esc(e.primary.map(muscleLabel).join(' · '))}</div></div></a>
         <div class="row" style="gap:0"><button class="mini" data-act="up" aria-label="Subir" ${i === 0 ? 'disabled style="opacity:.3"' : ''}>${I.up}</button><button class="mini" data-act="down" aria-label="Bajar" ${i === r.exerciseIds.length - 1 ? 'disabled style="opacity:.3"' : ''}>${I.down}</button><button class="mini" data-act="swap" aria-label="Sustituir">${I.swap}</button><button class="mini" data-act="del" aria-label="Quitar de la rutina">${I.trash}</button></div></div>`; }).join('')}
-      ${r.exerciseIds.length ? '' : '<div class="empty">La rutina está vacía. Añade un ejercicio.</div>'}
+      ${r.exerciseIds.length ? '' : r.custom ? '<div class="empty"><div class="big">Tu rutina</div>Añade los ejercicios que te apetezca entrenar. Puedes cambiarla siempre que quieras.</div>' : '<div class="empty">La rutina está vacía. Añade un ejercicio.</div>'}
       <div class="spacer"></div><button class="btn btn-secondary" data-act="add">Añadir ejercicio</button>
-      <div class="spacer"></div><button class="btn btn-ghost" data-act="reset">Restablecer rutina original</button>
+      <div class="spacer"></div>${r.custom ? (r.exerciseIds.length ? '<button class="btn btn-ghost" data-act="reset">Vaciar rutina</button>' : '') : '<button class="btn btn-ghost" data-act="reset">Restablecer rutina original</button>'}
       <div class="savebar"><button class="btn btn-primary" data-act="start" ${r.exerciseIds.length ? '' : 'disabled'}>Empezar entrenamiento ${I.arrow}</button></div>`;
   };
   draw();
@@ -196,18 +211,17 @@ async function renderRutina(id) {
     else if (a === 'del') { await store.removeFromRoutine(id, eid); toast('Quitado de la rutina. Tu historial sigue intacto.'); }
     else if (a === 'swap') { const n = await pickExercise({ title: 'Sustituir por…', exclude: r.exerciseIds }); if (n) await store.replaceInRoutine(id, eid, n); }
     else if (a === 'add') { const n = await pickExercise({ title: 'Añadir a la rutina', exclude: r.exerciseIds }); if (n) await store.addToRoutine(id, n); }
-    else if (a === 'reset') { if (confirm('¿Volver a la selección original de esta rutina? Tu historial no se toca.')) await store.resetRoutine(id); }
+    else if (a === 'reset') { if (confirm(r.custom ? '¿Quitar todos los ejercicios de esta rutina? Tu historial no se toca.' : '¿Volver a la selección original de esta rutina? Tu historial no se toca.')) await store.resetRoutine(id); }
     else if (a === 'start') return go(`#/sesion/${id}/${newSid()}`);
     draw();
   };
 }
 
 /* ---------- EJERCICIOS + mapa muscular ---------- */
-const exFilter = { q: '', muscles: new Set(), routine: null, verified: false };
+const exFilter = { q: '', muscles: new Set(), routine: null };
 function exList() {
-  const items = store.filterExercises({ query: exFilter.q, muscles: [...exFilter.muscles], routineId: exFilter.routine, onlyVerified: exFilter.verified });
-  const ver = store.verifiedIds();
-  return items.length ? items.map(e => `<a class="list-item" href="#/ejercicio/${esc(e.id)}">${thumb(e.primary)}<div class="grow"><div class="t">${esc(e.name)}${ver.has(e.id) ? '<span class="pill ok">en mi gimnasio</span>' : ''}</div><div class="s">${esc(e.primary.map(muscleLabel).join(' · '))}${machineOf(e) ? ' · ' + esc(machineOf(e)) : ''}</div></div>${I.chev}</a>`).join('')
+  const items = store.filterExercises({ query: exFilter.q, muscles: [...exFilter.muscles], routineId: exFilter.routine });
+  return items.length ? items.map(e => `<a class="list-item" href="#/ejercicio/${esc(e.id)}">${exThumb(e)}<div class="grow"><div class="t">${esc(e.name)}${e.custom ? '<span class="pill">mío</span>' : ''}</div><div class="s">${esc(e.primary.map(muscleLabel).join(' · '))}${machineOf(e) ? ' · ' + esc(machineOf(e)) : ''}</div></div>${I.chev}</a>`).join('')
     : '<div class="empty"><div class="big">Nada por aquí</div>Prueba con otros filtros o quita alguno.</div>';
 }
 async function renderEjercicios() {
@@ -215,7 +229,7 @@ async function renderEjercicios() {
   const head = () => `<h1 class="page-title">Ejercicios</h1>
     <div class="search">${I.search}<input id="q" type="search" placeholder="Buscar ejercicio o máquina" value="${esc(exFilter.q)}" autocomplete="off"></div>
     <div class="chips">${chip(!exFilter.muscles.size, 'data-m=""', 'Todos')}${MUSCLES.map(m => chip(exFilter.muscles.has(m.id), `data-m="${m.id}"`, esc(m.label))).join('')}</div>
-    <div class="chips">${store.routines.map(r => chip(exFilter.routine === r.id, `data-r="${esc(r.id)}"`, `Rutina ${esc(r.id)}`, 'sage')).join('')}${chip(exFilter.verified, 'data-v="1"', 'Verificada en mi gimnasio', 'sage')}<button class="chip" data-map="1">Mapa muscular</button></div>`;
+    <div class="chips">${store.routines.map(r => chip(exFilter.routine === r.id, `data-r="${esc(r.id)}"`, `Rutina ${esc(r.id)}`, 'sage')).join('')}<button class="chip" data-map="1">Mapa muscular</button></div>`;
   view.innerHTML = `<div id="head">${head()}</div><div id="list">${exList()}</div>`;
   const refresh = () => { $('#head').innerHTML = head(); $('#list').innerHTML = exList(); };
   view.oninput = e => { if (e.target.id === 'q') { exFilter.q = e.target.value; $('#list').innerHTML = exList(); } };
@@ -223,7 +237,6 @@ async function renderEjercicios() {
     const t = e.target.closest('button'); if (!t) return;
     if (t.dataset.m !== undefined) { const m = t.dataset.m; if (!m) exFilter.muscles.clear(); else exFilter.muscles.has(m) ? exFilter.muscles.delete(m) : exFilter.muscles.add(m); refresh(); }
     else if (t.dataset.r) { exFilter.routine = exFilter.routine === t.dataset.r ? null : t.dataset.r; refresh(); }
-    else if (t.dataset.v) { exFilter.verified = !exFilter.verified; refresh(); }
     else if (t.dataset.map) openMuscleMap(refresh);
   };
 }
@@ -264,32 +277,41 @@ async function renderFicha(id) {
   const clip = (await getClips())[id];
   const last = await store.lastLog(id);
   const logs = await store.logsForExercise(id);
-  const ver = store.verifiedIds().has(id);
+  const photos = e.photos || [];
   const pend = clip?.validated === true ? '' : '<div class="badge">Demostración pendiente de validar</div>';
-  const media = clip?.video
+  const pic = (src, alt, badge, extra = '') => `<div class="media pic" ${extra}><img class="bg" src="${esc(src)}" alt="" aria-hidden="true"><img class="fg" src="${esc(src)}" alt="${esc(alt)}">${badge}</div>`;
+  const media = photos.length
+    ? pic(photos[0], 'Foto de ' + e.name, `<div class="badge">Tu foto${photos.length > 1 ? ` · <span id="pi">1</span>/${photos.length}` : ''}</div>`, 'id="photo" data-i="0"')
+    : clip?.video
     ? `<div class="media" id="media">${clip.poster ? `<img src="${esc(clip.poster)}" alt="${esc(e.name)}">` : `<div class="pending"><div class="machine">${esc(e.machine || e.name)}</div></div>`}<button class="play" aria-label="Reproducir demostración"><span>${I.play}</span></button>${pend}</div>`
     : clip?.poster
-      ? `<div class="media"><img src="${esc(clip.poster)}" alt="${esc(e.name)}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'pending',innerHTML:'<div class=machine>${esc(e.machine || e.name)}</div>'}))">${pend}</div>`
+      ? pic(clip.poster, e.name, clip.validated === true ? '' : '<div class="badge">Imagen orientativa (IA)</div>')
       : `<div class="media"><div class="pending"><div class="machine">${esc(e.machine || e.name)}</div><div class="small muted" style="margin-top:8px">Aquí irá una demostración</div></div><div class="badge">Demostración pendiente de validar</div></div>`;
   const setsHtml = sets => sets.map((s, i) => `<div class="set-line"><span>Serie ${i + 1}</span><b>${fmt(s.kg)} kg × ${s.reps} reps</b></div>`).join('');
   const tabs = { how: 'Cómo se hace', muscles: 'Músculos', hist: 'Historial' };
   let tab = 'how';
   const body = () => {
-    if (tab === 'how') return e.cues.length ? e.cues.map((c, i) => `<div class="cue"><b>${i + 1}</b><span>${esc(c)}</span></div>`).join('') : '<p class="muted">Este ejercicio es tuyo y aún no tiene claves técnicas.</p>';
+    if (tab === 'how') return e.cues.length ? e.cues.map((c, i) => `<div class="cue"><b>${i + 1}</b><span>${esc(c)}</span></div>`).join('') : '<p class="muted">Este ejercicio es tuyo y aún no tiene claves técnicas. Puedes añadirlas con «Editar».</p>';
+    if (tab === 'muscles' && !e.primary.length) return '<p class="muted center" style="padding:20px 0">Aún no has indicado qué músculos trabaja. Puedes hacerlo con «Editar».</p>';
     if (tab === 'muscles') return bodyPair({ selected: new Set(e.primary) }).replace('body-pair', 'body-pair static') + `<div class="muscle-legend">${e.primary.map(m => `<span><i></i>${esc(muscleLabel(m))}</span>`).join('')}</div>${e.secondary.length ? `<p class="small muted center">También trabaja: ${esc(e.secondary.map(muscleLabel).join(', '))}</p>` : ''}`;
     return logs.length ? logs.map(l => `<div class="hist-day"><div class="row"><b class="grow">${esc(fMid(l.date))}</b><a class="small" style="text-decoration:underline" href="#/entrenar/${esc(id)}?log=${esc(l.id)}">Editar</a></div>${setsHtml(l.sets)}</div>`).join('') : '<p class="muted center" style="padding:20px 0">Todavía no hay registros de este ejercicio.</p>';
   };
   view.innerHTML = `${media}
-    <h1 class="page-title" style="font-size:28px">${esc(e.name)}${ver ? '<span class="pill ok">en mi gimnasio</span>' : ''}</h1>
-    <div class="sub" style="margin-bottom:10px">${esc(e.primary.map(muscleLabel).join(' · '))}${machineOf(e) ? ' · ' + esc(machineOf(e)) : ''}</div>
+    <h1 class="page-title" style="font-size:28px">${esc(e.name)}</h1>
+    <div class="row" style="margin-bottom:10px;align-items:flex-start"><div class="sub grow" style="margin:0">${esc(e.primary.map(muscleLabel).join(' · '))}${machineOf(e) ? ' · ' + esc(machineOf(e)) : ''}</div>${e.custom ? '<button class="btn btn-ghost btn-sm" data-edit>Editar</button>' : ''}</div>
     <div class="card last-box"><div class="eyebrow" style="margin:0 0 6px">Último registro${last ? ' · ' + esc(fMid(last.date)) : ''}</div>${last ? setsHtml(last.sets) : '<div class="muted small">Aún no has registrado este ejercicio.</div>'}</div>
     <div class="tabs-in">${Object.entries(tabs).map(([k, v]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${v}</button>`).join('')}</div>
     <div id="tabBody">${body()}</div>
     <div class="savebar"><button class="btn btn-primary" data-train>Entrenar este ejercicio</button></div>`;
+  // Sin conexión y sin descargar: en vez de una imagen rota, el nombre de la máquina.
+  view.querySelector('.media.pic .fg')?.addEventListener('error', ev => { ev.target.closest('.media').innerHTML = `<div class="pending"><div class="machine">${esc(e.machine || e.name)}</div><div class="small muted" style="margin-top:8px">Imagen no descargada. Prepárala sin conexión desde Ajustes.</div></div>`; });
   view.onclick = ev => {
     const t = ev.target.closest('[data-tab]');
     if (t) { tab = t.dataset.tab; view.querySelectorAll('.tabs-in button').forEach(b => b.classList.toggle('on', b === t)); $('#tabBody').innerHTML = body(); return; }
     if (ev.target.closest('[data-train]')) return go(`#/entrenar/${id}`);
+    if (ev.target.closest('[data-edit]')) return openEditExercise(e);
+    const ph = ev.target.closest('#photo');
+    if (ph && photos.length > 1) { const i = (Number(ph.dataset.i) + 1) % photos.length; ph.dataset.i = i; ph.querySelectorAll('img').forEach(im => { im.src = photos[i]; }); $('#pi').textContent = i + 1; }
     if (ev.target.closest('#media .play')) {
       const m = $('#media'); const v = document.createElement('video');
       v.src = clip.video; v.muted = true; v.loop = true; v.playsInline = true; v.autoplay = true; v.setAttribute('playsinline', ''); v.setAttribute('muted', '');
@@ -491,7 +513,7 @@ async function renderDia(date) {
     <button class="pick" data-single><span class="ltr">+</span><span class="grow"><b>Un solo ejercicio</b></span>${I.chev}</button></div>
     ${!plan && !logs.length && date >= today ? `<div class="eyebrow">Planificar</div><div class="chips">${store.routines.map(r => `<button class="chip" data-plan="${esc(r.id)}">Rutina ${esc(r.id)}</button>`).join('')}</div>` : ''}`;
   view.onclick = async ev => {
-    const s = ev.target.closest('[data-start]'); if (s) return go(`#/sesion/${s.dataset.start}/${newSid()}${qs({ date: date === today ? '' : date })}`);
+    const s = ev.target.closest('[data-start]'); if (s) return startRoutine(s.dataset.start, qs({ date: date === today ? '' : date }));
     if (ev.target.closest('[data-single]')) { const n = await pickExercise({ title: 'Ejercicio a registrar' }); if (n) go(`#/entrenar/${n}${qs({ date: date === today ? '' : date })}`); return; }
     if (ev.target.closest('[data-unplan]')) { await store.removePlan(date); toast('Plan quitado'); return renderDia(date); }
     const p = ev.target.closest('[data-plan]'); if (p) { await store.setPlan(date, p.dataset.plan); toast('Día planificado'); renderDia(date); }
@@ -513,15 +535,92 @@ function legacyReview(raw, after) {
   });
 }
 
+/* ---------- ¿QUÉ MÁQUINA ES? Foto + búsqueda en la app (gratis, todo en el móvil). Si no está, se añade. ---------- */
+const MAX_PHOTOS = 3;
+async function renderEscanear() {
+  const st = { photos: [], name: '', muscles: new Set() };
+  const photoGrid = () => `${st.photos.map((p, i) => `<div class="photo-tile"><img src="${p}" alt="Foto ${i + 1}"><button type="button" class="rm" data-rm="${i}" aria-label="Quitar foto ${i + 1}">×</button></div>`).join('')}
+    ${st.photos.length < MAX_PHOTOS ? `<label class="photo-tile add">${I.cam}<span>${st.photos.length ? 'Otra foto' : 'Hacer foto'}</span><input type="file" accept="image/*" capture="environment" data-shot hidden></label>
+      <label class="photo-tile add alt"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9.5" r="1.6"/><path d="M20 15l-4.5-4.5L6 20"/></svg><span>De la galería</span><input type="file" accept="image/*" multiple data-shot hidden></label>` : ''}`;
+  const suggest = () => {
+    const q = st.name.trim(); let list = [], head = '';
+    if (q.length >= 3) {
+      list = [...new Map([...findMatches(store.exercises(), { name: q }, 5), ...store.filterExercises({ query: q })].map(e => [e.id, e])).values()];
+      head = list.length ? '¿Es alguna de estas?' : '';
+    }
+    if (!list.length && st.muscles.size) {
+      list = store.filterExercises({ muscles: [...st.muscles] });
+      head = list.length ? `En la app hay ${plural(list.length, 'ejercicio', 'ejercicios')} de ${[...st.muscles].map(muscleLabel).join(' y ').toLowerCase()}: compáralos con tu máquina` : '';
+    }
+    if (!list.length) return q.length >= 3 || st.muscles.size ? '<p class="small muted" style="margin:10px 0 0">No hay nada parecido en la app: puedes añadirla abajo.</p>' : '';
+    return `<div class="eyebrow">${esc(head)}</div>${list.slice(0, 8).map(e => `<a class="list-item" href="#/ejercicio/${esc(e.id)}">${exThumb(e)}<div class="grow"><div class="t">${esc(e.name)}</div><div class="s">${esc(e.primary.map(muscleLabel).join(' · '))}${machineOf(e) ? ' · ' + esc(machineOf(e)) : ''}</div></div>${I.chev}</a>`).join('')}`;
+  };
+  view.innerHTML = `<h1 class="page-title">¿Qué máquina es?</h1>
+    <p class="sub">Hazle una foto y búscala por su nombre o por el músculo que crees que trabaja. Si ya está en la app, ábrela; si no, añádela con tu foto.</p>
+    <div class="photo-grid" id="ph">${photoGrid()}</div>
+    <label class="lbl" for="fxName">Nombre (o cómo la llamarías)</label><input class="field-text" id="fxName" placeholder="Ej. remo, jalón, prensa…" autocomplete="off">
+    <div class="lbl">Músculos que crees que trabaja</div>${muscleChips(st.muscles)}
+    <div id="sugg"></div>
+    <div class="eyebrow">¿No está? Añádela</div>
+    <label class="lbl" for="fxMachine" style="margin-top:0">Máquina (opcional)</label><input class="field-text" id="fxMachine" placeholder="Ej. Technogym Selection Low Row" autocomplete="off">
+    <label class="lbl" for="fxCues">Cómo se hace (una clave por línea, opcional)</label><textarea class="field-text" id="fxCues" rows="3" placeholder="Si no lo sabes, pregunta a un monitor y apúntalo aquí o más tarde con «Editar»."></textarea>
+    <div class="savebar"><button class="btn btn-primary" data-save>Añadir a mis ejercicios</button></div>`;
+  const drawPhotos = () => { $('#ph').innerHTML = photoGrid(); };
+  const drawSugg = () => { $('#sugg').innerHTML = suggest(); };
+  view.onchange = async ev => {
+    const inp = ev.target.closest('[data-shot]'); if (!inp || !inp.files?.length) return;
+    const files = [...inp.files].slice(0, MAX_PHOTOS - st.photos.length);
+    for (const f of files) { try { st.photos.push(await shrinkPhoto(f)); } catch (err) { toast(err.message); } }
+    if (inp.files.length > files.length) toast(`Máximo ${MAX_PHOTOS} fotos`);
+    drawPhotos();
+  };
+  view.oninput = ev => { if (ev.target.id === 'fxName') { st.name = ev.target.value; drawSugg(); } };
+  view.onclick = async ev => {
+    const rm = ev.target.closest('[data-rm]'); if (rm) { st.photos.splice(Number(rm.dataset.rm), 1); return drawPhotos(); }
+    const mu = ev.target.closest('[data-mus]'); if (mu) { const m = mu.dataset.mus; st.muscles.has(m) ? st.muscles.delete(m) : st.muscles.add(m); mu.classList.toggle('on'); return drawSugg(); }
+    if (ev.target.closest('[data-save]')) {
+      const name = $('#fxName').value.trim();
+      if (!name) { $('#fxName').focus(); return toast('Ponle un nombre (aunque sea provisional)'); }
+      if (!st.muscles.size) return toast('Elige al menos un músculo');
+      const same = findMatches(store.exercises(), { name }, 1)[0];
+      if (same && !confirm(`Ya tienes «${same.name}», que se parece mucho. ¿Crear otro igualmente?`)) return go(`#/ejercicio/${same.id}`);
+      try {
+        const cues = $('#fxCues').value.split('\n').map(x => x.trim()).filter(Boolean);
+        const ex = await store.addCustomExercise({ name, machine: $('#fxMachine').value, primary: [...st.muscles], cues, photos: st.photos });
+        toast('Ejercicio añadido'); replace(`#/ejercicio/${ex.id}`);
+      } catch (err) { if (err.existingId) { toast(err.message); return go(`#/ejercicio/${err.existingId}`); } toast(err.message); }
+    }
+  };
+}
+
+/* Editar / borrar un ejercicio propio */
+function openEditExercise(e) {
+  const sel = new Set(e.primary);
+  const sheet = openSheet(`<h3>Editar ejercicio</h3>
+    <label class="lbl" for="exName">Nombre</label><input class="field-text" id="exName" value="${esc(e.name)}" autocomplete="off">
+    <label class="lbl" for="exMachine">Máquina</label><input class="field-text" id="exMachine" value="${esc(e.machine || '')}" autocomplete="off">
+    <div class="lbl">Músculos que trabaja</div>${muscleChips(sel)}
+    <label class="lbl" for="exCues">Cómo se hace (una clave por línea)</label><textarea class="field-text" id="exCues" rows="4">${esc(e.cues.join('\n'))}</textarea>
+    <button class="btn btn-primary" data-ok>Guardar cambios</button><div class="spacer"></div>
+    <button class="btn btn-danger" data-del>Borrar ejercicio</button><div class="spacer"></div><button class="btn btn-ghost" data-close>Cancelar</button>`, async ev => {
+    const mu = ev.target.closest('[data-mus]'); if (mu) { const m = mu.dataset.mus; sel.has(m) ? sel.delete(m) : sel.add(m); mu.classList.toggle('on'); return; }
+    if (ev.target.closest('[data-close]')) return closeSheet();
+    if (ev.target.closest('[data-ok]')) {
+      if (!sel.size) return toast('Elige al menos un músculo');
+      const cues = sheet.querySelector('#exCues').value.split('\n').map(x => x.trim()).filter(Boolean);
+      try { await store.updateCustomExercise(e.id, { name: sheet.querySelector('#exName').value, machine: sheet.querySelector('#exMachine').value, primary: [...sel], cues }); closeSheet(); toast('Cambios guardados'); render(); } catch (err) { toast(err.message); }
+    }
+    if (ev.target.closest('[data-del]')) {
+      if (!confirm(`¿Borrar «${e.name}»? Se quitará también de tus rutinas.`)) return;
+      try { await store.deleteCustomExercise(e.id); closeSheet(); toast('Ejercicio borrado'); replace('#/ejercicios'); } catch (err) { toast(err.message); }
+    }
+  });
+}
+
 /* ---------- AJUSTES ---------- */
 async function renderAjustes() {
-  const ver = store.verifiedIds();
-  const sections = store.exercises();
   view.innerHTML = `<h1 class="page-title">Ajustes</h1><p class="sub">Lo que no se usa al entrenar vive aquí.</p>
     <div class="eyebrow">Uso sin conexión</div><div class="card last-box" id="offBox"><div class="muted small">Comprobando…</div></div>
-    <div class="eyebrow">Máquinas de mi gimnasio</div>
-    <p class="small muted" style="margin:0 0 8px">Marca las máquinas que has comprobado que existen en VivaGym Clara del Rey (Santa Rita). Hasta entonces el catálogo es genérico.</p>
-    <div id="machines">${sections.map(e => `<button class="list-item" data-ver="${esc(e.id)}"><div class="grow"><div class="t">${esc(e.name)}</div><div class="s">${esc(e.machine || '—')}</div></div><span class="switch ${ver.has(e.id) ? 'on' : ''}" role="switch" aria-checked="${ver.has(e.id)}"></span></button>`).join('')}</div>
     <div class="eyebrow">Mis ejercicios</div>
     <input class="field-text" id="cxName" placeholder="Nombre del ejercicio"><input class="field-text" id="cxMachine" placeholder="Máquina (opcional)">
     <select class="sel" id="cxMuscle" style="margin-bottom:8px">${MUSCLES.filter(m => !m.group).map(m => `<option value="${m.id}">${esc(m.label)}</option>`).join('')}</select>
@@ -557,8 +656,7 @@ async function renderAjustes() {
   let abort = null;
   view.onclick = async ev => {
     const t = ev.target.closest('button,label'); if (!t) return;
-    if (t.dataset.ver) { const on = await store.toggleVerified(t.dataset.ver); const sw = t.querySelector('.switch'); sw.classList.toggle('on', on); sw.setAttribute('aria-checked', on); }
-    else if (t.dataset.scope) t.classList.toggle('on');
+    if (t.dataset.scope) t.classList.toggle('on');
     else if (t.id === 'prepBtn') {
       if (abort) { abort.abort(); return; }
       abort = new AbortController(); t.textContent = 'Cancelar descarga'; t.classList.replace('btn-primary', 'btn-ghost');
@@ -621,6 +719,7 @@ function setupServiceWorker() {
 (async function boot() {
   try {
     await store.init();
+    await getClips().catch(() => { clipsCache = {}; });
     navigator.storage?.persist?.().catch(() => {});
     $('#app').hidden = false;
     if (!location.hash) history.replaceState(null, '', '#/hoy');

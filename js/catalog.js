@@ -1,5 +1,4 @@
-// Catálogo genérico de ejercicios. NO presupone qué máquinas hay en el gimnasio:
-// la disponibilidad real se marca en Ajustes ("máquinas verificadas").
+// Catálogo genérico de ejercicios. NO presupone qué máquinas hay en el gimnasio.
 // Las claves técnicas son criterios generales y conservadores; conviene que un
 // entrenador las revise antes de darlas por validadas (ver README).
 
@@ -157,6 +156,10 @@ export const DEFAULT_ROUTINES = [
   { id: 'A', name: 'Piernas y glúteos', short: 'Piernas', exerciseIds: ['prensa', 'ext-cuadriceps', 'curl-femoral', 'aductores', 'abductores', 'gluteo-maquina'] },
   { id: 'B', name: 'Pecho y tríceps', short: 'Pecho + Tríceps', exerciseIds: ['press-pecho', 'pec-deck', 'press-inclinado', 'press-hombros', 'triceps-polea', 'triceps-maquina'] },
   { id: 'C', name: 'Espalda y bíceps', short: 'Espalda + Bíceps', exerciseIds: ['jalon-pecho', 'jalon-cerrado', 'remo-sentado', 'remo-pecho', 'curl-biceps-maquina', 'curl-biceps-polea'] },
+  // Cuerpo completo: 2 de pierna, 2 de empuje, 2 de tirón. Pensada para días sueltos o semanas de 2 visitas.
+  { id: 'D', name: 'Full body', short: 'Full body', exerciseIds: ['prensa', 'curl-femoral', 'press-pecho', 'jalon-pecho', 'remo-sentado', 'press-hombros'] },
+  // Vacía a propósito: la arma Mimi.
+  { id: 'E', name: 'Personalizada', short: 'Personalizada', custom: true, exerciseIds: [] },
 ];
 
 // Arquitectura preparada para un cardio voluntario futuro (desactivado por defecto).
