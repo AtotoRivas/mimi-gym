@@ -1,5 +1,5 @@
 // Service worker de Mimi Gym. VERSION la estampa build.mjs (hash del contenido): cada cambio => caché nueva.
-const VERSION = '8b20e81517';
+const VERSION = 'ca9431923a';
 const SHELL = 'mimi-shell-' + VERSION;
 const MEDIA = 'mimi-media-v1'; // los vídeos descargados sobreviven a las actualizaciones de la app
 const scope = self.registration.scope;

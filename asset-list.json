@@ -1,6 +1,6 @@
 {
- "version": "8b20e81517",
- "builtAt": "2026-10-27T16:08:45.084Z",
+ "version": "ca9431923a",
+ "builtAt": "2026-10-27T16:14:33.798Z",
  "shell": [
   {
    "url": "./",
@@ -8,7 +8,7 @@
   },
   {
    "url": "css/app.css",
-   "bytes": 27308
+   "bytes": 27381
   },
   {
    "url": "favicon.ico",
