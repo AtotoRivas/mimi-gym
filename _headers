@@ -1,0 +1,17 @@
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/sw.js
+  Cache-Control: no-cache
+/asset-list.json
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Cache-Control: no-cache
+  Content-Type: application/manifest+json
+/media/manifest.json
+  Cache-Control: no-cache
+/js/*
+  Cache-Control: no-cache
+/css/*
+  Cache-Control: no-cache

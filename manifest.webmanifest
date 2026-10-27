@@ -1,0 +1,17 @@
+{
+  "name": "Mimi Gym",
+  "short_name": "Mimi Gym",
+  "description": "Tu cuaderno de entrenamiento: qué toca hoy, la última sesión y tus pesos, también sin conexión.",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F5F0E7",
+  "theme_color": "#F5F0E7",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-1024.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any" }
+  ]
+}

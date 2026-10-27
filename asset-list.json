@@ -1,0 +1,102 @@
+{
+ "version": "3930f907a2",
+ "builtAt": "2026-10-27T10:32:12.452Z",
+ "shell": [
+  {
+   "url": "./",
+   "bytes": 0
+  },
+  {
+   "url": "css/app.css",
+   "bytes": 19568
+  },
+  {
+   "url": "favicon.ico",
+   "bytes": 4978
+  },
+  {
+   "url": "fonts/inter-400.woff",
+   "bytes": 58124
+  },
+  {
+   "url": "fonts/inter-500.woff",
+   "bytes": 62428
+  },
+  {
+   "url": "fonts/inter-600.woff",
+   "bytes": 62756
+  },
+  {
+   "url": "fonts/lora-var.woff",
+   "bytes": 48692
+  },
+  {
+   "url": "icons/apple-touch-icon.png",
+   "bytes": 12055
+  },
+  {
+   "url": "icons/favicon-32.png",
+   "bytes": 1573
+  },
+  {
+   "url": "icons/icon-1024.png",
+   "bytes": 30363
+  },
+  {
+   "url": "icons/icon-180.png",
+   "bytes": 12055
+  },
+  {
+   "url": "icons/icon-192.png",
+   "bytes": 13042
+  },
+  {
+   "url": "icons/icon-512.png",
+   "bytes": 28985
+  },
+  {
+   "url": "icons/icon-rounded-512.png",
+   "bytes": 41161
+  },
+  {
+   "url": "index.html",
+   "bytes": 2706
+  },
+  {
+   "url": "js/app.js",
+   "bytes": 58523
+  },
+  {
+   "url": "js/body.js",
+   "bytes": 4591
+  },
+  {
+   "url": "js/catalog.js",
+   "bytes": 8861
+  },
+  {
+   "url": "js/db.js",
+   "bytes": 3072
+  },
+  {
+   "url": "js/offline.js",
+   "bytes": 3936
+  },
+  {
+   "url": "js/store.js",
+   "bytes": 16372
+  },
+  {
+   "url": "manifest.webmanifest",
+   "bytes": 653
+  },
+  {
+   "url": "media/manifest.json",
+   "bytes": 18
+  },
+  {
+   "url": "asset-list.json",
+   "bytes": 0
+  }
+ ]
+}
