@@ -313,7 +313,8 @@ async function renderFicha(id) {
   const progress = () => {
     const series = progressSeries(logs, metric); if (!logs.length) return '';
     if (series.length < 2) return '<div class="card pg-card"><div class="eyebrow" style="margin:0 0 4px">Tu progreso</div><p class="small muted" style="margin:0 0 6px">Cuando registres este ejercicio otro día, aquí verás cómo evolucionas.</p></div>';
-    const m = M[metric], a = series[0], z = series.at(-1);
+    const m = { ...M[metric] }, a = series[0], z = series.at(-1);
+    if (e.assist && metric === 'kg') m.title = 'Kg de ayuda de cada día (menos ayuda = más fuerza)';
     return `<div class="card pg-card"><div class="row" style="margin-bottom:6px"><div class="eyebrow grow" style="margin:0">Tu progreso</div>
       <div class="seg" role="group" aria-label="Qué mostrar">${Object.entries(M).map(([k, v]) => `<button type="button" data-metric="${k}" class="${k === metric ? 'on' : ''}" aria-pressed="${k === metric}">${v.btn}</button>`).join('')}</div></div>
       <div class="pg-title">${m.title}</div>
@@ -433,6 +434,7 @@ async function renderEntrenar(exId, q) {
       <h1 class="page-title" style="font-size:26px">${esc(ex.name)}</h1>
       <div class="sub" style="margin-bottom:8px">${esc(ex.machine || ex.primary.map(muscleLabel).join(' · '))} · <a href="#/ejercicio/${esc(exId)}" style="text-decoration:underline">cómo se hace</a></div>
       ${last ? `<div class="card last-box"><div class="row"><div class="eyebrow grow" style="margin:0">Última vez · ${esc(fMid(last.date))}</div><button class="btn btn-secondary btn-sm" data-act="copy">Copiar series</button></div>${last.sets.map((s, i) => `<div class="set-line"><span>Serie ${i + 1}</span><b>${fmt(s.kg)} kg × ${s.reps} reps</b></div>`).join('')}</div>` : (editing ? '' : '<div class="note-box">Primera vez con este ejercicio: apunta lo que hagas y la próxima vez lo verás aquí.</div>')}
+      ${ex.assist ? '<div class="note-box small">Con tu peso, apunta <b>0 kg</b>. Si usas la máquina asistida, apunta los <b>kg de ayuda</b>: cuanta menos ayuda, más fuerza.</div>' : ''}
       <div class="stepbar">Salto de peso:<button class="chip ${st.step === 2.5 ? 'on' : ''}" data-act="step" data-v="2.5">2,5 kg</button><button class="chip ${st.step === 5 ? 'on' : ''}" data-act="step" data-v="5">5 kg</button></div>
       <div id="sets">${st.sets.map(rowHtml).join('')}</div>
       <button class="btn btn-secondary" data-act="add">Añadir serie</button>

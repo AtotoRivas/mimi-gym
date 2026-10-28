@@ -18,7 +18,7 @@
   "curl-biceps-maquina": {
    "validated": false,
    "poster": "media/curl-biceps-maquina.jpg",
-   "posterBytes": 26277
+   "posterBytes": 117210
   },
   "curl-biceps-polea": {
    "validated": false,
@@ -53,7 +53,7 @@
   "gemelos-sentada": {
    "validated": false,
    "poster": "media/gemelos-sentada.jpg",
-   "posterBytes": 25093
+   "posterBytes": 87416
   },
   "gluteo-maquina": {
    "validated": false,
@@ -108,7 +108,7 @@
   "press-pecho": {
    "validated": false,
    "poster": "media/press-pecho.jpg",
-   "posterBytes": 43500
+   "posterBytes": 80223
   },
   "remo-mancuerna": {
    "validated": false,
@@ -134,6 +134,36 @@
    "validated": false,
    "poster": "media/zancadas.jpg",
    "posterBytes": 21755
+  },
+  "curl-martillo": {
+   "validated": false,
+   "poster": "media/curl-martillo.jpg",
+   "posterBytes": 72823
+  },
+  "fondos": {
+   "validated": false,
+   "poster": "media/fondos.jpg",
+   "posterBytes": 114094
+  },
+  "lumbares": {
+   "validated": false,
+   "poster": "media/lumbares.jpg",
+   "posterBytes": 88150
+  },
+  "remo-pecho": {
+   "validated": false,
+   "poster": "media/remo-pecho.jpg",
+   "posterBytes": 95853
+  },
+  "triceps-maquina": {
+   "validated": false,
+   "poster": "media/triceps-maquina.jpg",
+   "posterBytes": 95140
+  },
+  "abdominal-maquina": {
+   "validated": false,
+   "poster": "media/abdominal-maquina.jpg",
+   "posterBytes": 76763
   }
  }
 }

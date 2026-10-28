@@ -1,6 +1,6 @@
 {
- "version": "ca9431923a",
- "builtAt": "2026-10-27T16:14:33.798Z",
+ "version": "60880d80db",
+ "builtAt": "2026-10-28T07:59:02.126Z",
  "shell": [
   {
    "url": "./",
@@ -64,7 +64,7 @@
   },
   {
    "url": "js/app.js",
-   "bytes": 76943
+   "bytes": 77242
   },
   {
    "url": "js/body.js",
@@ -72,7 +72,7 @@
   },
   {
    "url": "js/catalog.js",
-   "bytes": 13341
+   "bytes": 15542
   },
   {
    "url": "js/db.js",
@@ -96,7 +96,7 @@
   },
   {
    "url": "js/store.js",
-   "bytes": 19703
+   "bytes": 21512
   },
   {
    "url": "manifest.webmanifest",
@@ -104,7 +104,7 @@
   },
   {
    "url": "media/manifest.json",
-   "bytes": 3136
+   "bytes": 3798
   },
   {
    "url": "asset-list.json",

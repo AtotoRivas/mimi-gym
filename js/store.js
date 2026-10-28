@@ -1,5 +1,5 @@
 // Lógica de datos de Mimi Gym. Independiente del DOM: se puede probar en Node.
-import { BASE_EXERCISES, DEFAULT_ROUTINES, DEFAULT_SETTINGS, LEG_MUSCLES, MUSCLES } from './catalog.js';
+import { BASE_EXERCISES, DEFAULT_ROUTINES, DEFAULT_SETTINGS, LEG_MUSCLES, MUSCLES, RETIRED_EXERCISES, CATALOG_REV } from './catalog.js';
 
 export const BACKUP_VERSION = 1;
 const TZ = 'Europe/Madrid';
@@ -42,13 +42,39 @@ export class Store {
     const rows = await this.db.getAll('settings');
     this.settings = { ...DEFAULT_SETTINGS };
     rows.filter(r => !String(r.key).startsWith('draft:')).forEach(r => { this.settings[r.key] = r.value; });
+    await this.migrateCatalog();
     return this;
+  }
+
+  /* Cambios del catálogo sobre rutinas ya guardadas (se aplican una sola vez por revisión, respetando lo demás).
+     Rev 1: fuera «Press inclinado en máquina» y «Jalón agarre cerrado»; en C entran «Lumbares» y «Curl martillo».
+     Rev 2: A + «Gemelos sentada»; B + «Fondos en paralelas» y «Abdominal en máquina»; en C, «Lumbares» al final. */
+  async migrateCatalog() {
+    const rev = Number(this.settings.catalogRev) || 0;
+    if (rev >= CATALOG_REV) return;
+    const retired = new Set(RETIRED_EXERCISES.map(e => e.id));
+    const add = (ids, id, after) => { if (ids.includes(id)) return; const k = after ? ids.indexOf(after) : -1; ids.splice(k < 0 ? ids.length : k + 1, 0, id); };
+    for (const r of this.routines) {
+      let ids = r.exerciseIds.filter(id => !retired.has(id));
+      if (rev < 1 && r.id === 'C') {
+        if (!ids.includes('lumbares')) { const k = ids.findIndex(id => this.exercise(id)?.primary.includes('biceps')); ids.splice(k < 0 ? ids.length : k, 0, 'lumbares'); }
+        add(ids, 'curl-martillo');
+      }
+      if (rev < 2) {
+        if (r.id === 'A') add(ids, 'gemelos-sentada');
+        if (r.id === 'B') { add(ids, 'fondos', 'triceps-maquina'); ids = ids.filter(id => id !== 'abdominal-maquina'); ids.push('abdominal-maquina'); }
+        if (r.id === 'C' && ids.includes('lumbares')) ids = [...ids.filter(id => id !== 'lumbares'), 'lumbares'];
+      }
+      if (ids.join() !== r.exerciseIds.join()) { r.exerciseIds = ids; await this.db.put('routines', r); }
+    }
+    await this.setSetting('catalogRev', CATALOG_REV);
   }
 
   /* ---------- Catálogo ---------- */
   exercises() { return [...BASE_EXERCISES, ...this.custom]; }
-  exercise(id) { return this.exercises().find(e => e.id === id) || null; }
-  exerciseByName(name) { const n = norm(name); return this.exercises().find(e => norm(e.name) === n) || null; }
+  // Busca también entre los retirados, para que el historial antiguo conserve su nombre.
+  exercise(id) { return this.exercises().find(e => e.id === id) || RETIRED_EXERCISES.find(e => e.id === id) || null; }
+  exerciseByName(name) { const n = norm(name); return [...this.exercises(), ...RETIRED_EXERCISES].find(e => norm(e.name) === n) || null; }
   exerciseRoutines(id) { return this.routines.filter(r => r.exerciseIds.includes(id)).map(r => r.id); }
 
   /* Ejercicios propios (desde Ajustes o desde la cámara, con fotos). */

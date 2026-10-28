@@ -51,8 +51,8 @@ export const BASE_EXERCISES = [
     cues: ['Apoya bien la espalda alta y coloca el cinturón o soporte sobre la cadera', 'Sube hasta alinear tronco y muslos, sin arquear la zona lumbar', 'Baja con control'],
   },
   {
-    id: 'gemelos-sentada', name: 'Gemelos sentada', machine: 'Máquina de gemelos sentada', primary: ['gemelos'], secondary: [], step: 5,
-    cues: ['Apoya la parte delantera del pie, con el talón libre', 'Sube todo lo que puedas, sin rebotes', 'Baja despacio hasta notar el estiramiento'],
+    id: 'gemelos-sentada', name: 'Gemelos sentada', machine: 'Máquina de gemelos sentada (palanca sobre los muslos)', primary: ['gemelos'], secondary: [], step: 5,
+    cues: ['Siéntate con la almohadilla de la palanca sobre los muslos, justo por encima de las rodillas', 'Apoya la parte delantera del pie en el escalón, con el talón libre', 'Sube los talones todo lo que puedas sin rebotes y baja despacio hasta notar el estiramiento'],
   },
   {
     id: 'press-pecho', name: 'Press de pecho en máquina', machine: 'Máquina de press de pecho', primary: ['pecho'], secondary: ['triceps', 'hombros'], step: 2.5,
@@ -61,10 +61,6 @@ export const BASE_EXERCISES = [
   {
     id: 'pec-deck', name: 'Aperturas en pec deck', machine: 'Pec deck / mariposa', primary: ['pecho'], secondary: ['hombros'], step: 2.5,
     cues: ['Ajusta el asiento para que los brazos queden a la altura del pecho', 'Codos ligeramente flexionados y espalda apoyada', 'Cierra con control y abre sin pasar del rango cómodo'],
-  },
-  {
-    id: 'press-inclinado', name: 'Press inclinado en máquina', machine: 'Máquina de press inclinado', primary: ['pecho', 'hombros'], secondary: ['triceps'], step: 2.5,
-    cues: ['Ajusta el asiento para que los agarres queden a la altura de la parte alta del pecho', 'Espalda apoyada, hombros abajo y atrás', 'Empuja sin bloquear los codos y vuelve despacio'],
   },
   {
     id: 'press-hombros', name: 'Press de hombros en máquina', machine: 'Máquina de press de hombros', primary: ['hombros'], secondary: ['triceps'], step: 2.5,
@@ -83,10 +79,6 @@ export const BASE_EXERCISES = [
     cues: ['Ajusta el soporte de muslos para quedar bien sujeta', 'Lleva la barra hacia la parte alta del pecho, con los codos hacia abajo', 'Sube la barra despacio, sin que el peso te tire de los hombros'],
   },
   {
-    id: 'jalon-cerrado', name: 'Jalón agarre cerrado', machine: 'Polea de jalón', primary: ['espalda'], secondary: ['biceps'], step: 2.5,
-    cues: ['Ajusta el soporte de muslos para quedar bien sujeta', 'Tira hacia el pecho llevando los codos hacia las costillas', 'Vuelve arriba con control, sin encoger los hombros'],
-  },
-  {
     id: 'remo-sentado', name: 'Remo sentado', machine: 'Polea de remo / máquina de remo', primary: ['espalda'], secondary: ['biceps'], step: 2.5,
     cues: ['Tronco erguido, sin balancearte', 'Tira llevando los codos hacia atrás y junta las escápulas', 'Vuelve despacio estirando los brazos sin encorvar la espalda'],
   },
@@ -101,6 +93,11 @@ export const BASE_EXERCISES = [
   {
     id: 'curl-biceps-polea', name: 'Curl de bíceps en polea', machine: 'Polea baja', primary: ['biceps'], secondary: [], step: 2.5,
     cues: ['Codos pegados al cuerpo y quietos', 'Sube sin balancear el tronco', 'Baja despacio hasta casi extender el brazo'],
+  },
+  {
+    // Con su peso corporal (0 kg) o en la máquina asistida (dip assist): entonces se apuntan los kg de AYUDA.
+    id: 'fondos', name: 'Fondos en paralelas', machine: 'Paralelas o máquina asistida', primary: ['triceps'], secondary: ['pecho', 'hombros'], step: 2.5, assist: true,
+    cues: ['Agárrate a las paralelas con los brazos estirados, los hombros bajos (lejos de las orejas) y el cuerpo recto', 'Baja doblando los codos hacia atrás hasta unos 90°, sin hundir los hombros', 'Sube estirando los brazos sin bloquearlos. Si aún no puedes con tu peso, usa la máquina asistida'],
   },
   {
     id: 'abdominal-maquina', name: 'Abdominal en máquina', machine: 'Máquina de abdominales', primary: ['abdomen'], secondary: [], step: 2.5,
@@ -150,17 +147,44 @@ export const BASE_EXERCISES = [
     id: 'curl-biceps-mancuernas', name: 'Curl de bíceps con mancuernas', machine: 'Mancuernas', primary: ['biceps'], secondary: [], step: 2.5,
     cues: ['Codos pegados al cuerpo y quietos', 'Sube sin balancear el tronco', 'Baja despacio hasta casi extender el brazo'],
   },
+  {
+    id: 'curl-martillo', name: 'Curl martillo con mancuernas', machine: 'Mancuernas', primary: ['biceps'], secondary: [], step: 2.5,
+    cues: ['De pie, una mancuerna en cada mano con las palmas mirándose: la mancuerna en vertical, como si sujetaras un martillo', 'Codos pegados al cuerpo; sube flexionando solo el codo, sin balancear el tronco', 'Baja despacio hasta casi estirar el brazo'],
+  },
+  {
+    id: 'lumbares', name: 'Lumbares en máquina', machine: 'Máquina de lumbares (extensión de espalda)', primary: ['espalda'], secondary: ['gluteos'], step: 2.5,
+    cues: ['Siéntate con la cadera bien atrás, los pies apoyados y el respaldo móvil en la mitad alta de la espalda', 'Empuja hacia atrás despacio hasta quedar recta, sin pasar de la vertical ni arquear la zona lumbar', 'Vuelve hacia delante controlando. Empieza con poco peso: es una zona que conviene trabajar con cuidado'],
+  },
 ];
 
 export const DEFAULT_ROUTINES = [
-  { id: 'A', name: 'Piernas y glúteos', short: 'Piernas', exerciseIds: ['prensa', 'ext-cuadriceps', 'curl-femoral', 'aductores', 'abductores', 'gluteo-maquina'] },
-  { id: 'B', name: 'Pecho y tríceps', short: 'Pecho + Tríceps', exerciseIds: ['press-pecho', 'pec-deck', 'press-inclinado', 'press-hombros', 'triceps-polea', 'triceps-maquina'] },
-  { id: 'C', name: 'Espalda y bíceps', short: 'Espalda + Bíceps', exerciseIds: ['jalon-pecho', 'jalon-cerrado', 'remo-sentado', 'remo-pecho', 'curl-biceps-maquina', 'curl-biceps-polea'] },
+  { id: 'A', name: 'Piernas y glúteos', short: 'Piernas', exerciseIds: ['prensa', 'ext-cuadriceps', 'curl-femoral', 'aductores', 'abductores', 'gluteo-maquina', 'gemelos-sentada'] },
+  { id: 'B', name: 'Pecho y tríceps', short: 'Pecho + Tríceps', exerciseIds: ['press-pecho', 'pec-deck', 'press-hombros', 'triceps-polea', 'triceps-maquina', 'fondos', 'abdominal-maquina'] },
+  // Remo sentado y remo con apoyo de pecho son alternativas: están las dos y Mimi elige.
+  { id: 'C', name: 'Espalda y bíceps', short: 'Espalda + Bíceps', exerciseIds: ['jalon-pecho', 'remo-sentado', 'remo-pecho', 'curl-biceps-maquina', 'curl-biceps-polea', 'curl-martillo', 'lumbares'] },
   // Cuerpo completo: 2 de pierna, 2 de empuje, 2 de tirón. Pensada para días sueltos o semanas de 2 visitas.
   { id: 'D', name: 'Full body', short: 'Full body', exerciseIds: ['prensa', 'curl-femoral', 'press-pecho', 'jalon-pecho', 'remo-sentado', 'press-hombros'] },
   // Vacía a propósito: la arma Mimi.
   { id: 'E', name: 'Personalizada', short: 'Personalizada', custom: true, exerciseIds: [] },
 ];
+
+// Ejercicios retirados del catálogo (oct 2026, a petición): no salen en listas, buscadores ni rutinas,
+// pero se conservan para que el historial antiguo siga mostrando su nombre.
+export const RETIRED_EXERCISES = [
+  {
+    retired: true,
+    id: 'press-inclinado', name: 'Press inclinado en máquina', machine: 'Máquina de press inclinado', primary: ['pecho', 'hombros'], secondary: ['triceps'], step: 2.5,
+    cues: ['Ajusta el asiento para que los agarres queden a la altura de la parte alta del pecho', 'Espalda apoyada, hombros abajo y atrás', 'Empuja sin bloquear los codos y vuelve despacio'],
+  },
+  {
+    retired: true,
+    id: 'jalon-cerrado', name: 'Jalón agarre cerrado', machine: 'Polea de jalón', primary: ['espalda'], secondary: ['biceps'], step: 2.5,
+    cues: ['Ajusta el soporte de muslos para quedar bien sujeta', 'Tira hacia el pecho llevando los codos hacia las costillas', 'Vuelve arriba con control, sin encoger los hombros'],
+  },
+];
+
+// Revisión del catálogo. Al subirla, Store.init() aplica una sola vez los cambios a las rutinas guardadas en el móvil.
+export const CATALOG_REV = 2;
 
 // Arquitectura preparada para un cardio voluntario futuro (desactivado por defecto).
 export const DEFAULT_SETTINGS = { optionalCardio: false };
