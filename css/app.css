@@ -308,3 +308,7 @@ textarea.field-text { height: 110px; padding: 10px 12px; font-size: 13px; }
 #flash.go { animation: restflash 2.3s linear 1; }
 /* Tres destellos a pantalla completa, opacos y sostenidos (≈0,35 s cada uno, ≈0,2 s entre ellos) */
 @keyframes restflash { 0% { opacity: 0; } 3%, 18% { opacity: 1; } 22%, 31% { opacity: 0; } 35%, 50% { opacity: 1; } 54%, 63% { opacity: 0; } 67%, 82% { opacity: 1; } 86%, 100% { opacity: 0; } }
+
+/* Hoy: enlace a la pestaña Rutinas bajo la sugerencia */
+.to-routines { margin: 10px 2px 0; font-size: 14px; color: var(--taupe-text); }
+.to-routines a { color: var(--green); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; padding: 6px 0; }

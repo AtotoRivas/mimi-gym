@@ -167,10 +167,11 @@ async function renderHoy() {
   const legacyBanner = showLegacy ? `<div class="card last-box" style="margin-top:12px"><b>Datos de la versión anterior</b><p class="small muted" style="margin:4px 0 10px">He encontrado entrenamientos guardados por la V2.2 en este dispositivo. Revísalos antes de importarlos.</p><div class="row"><button class="btn btn-secondary btn-sm" data-legacy-go>Revisar</button><button class="btn btn-ghost btn-sm" data-legacy-no>Ahora no</button></div></div>` : '';
   const r = plan ? store.routine(plan.routineId) : null;
   const sug = r ? null : await store.suggestRoutine(today);
-  const sugId = sug?.next && !sug.today.some(id => sug.cycle.includes(id)) ? sug.next : null;
   const count = x => x.exerciseIds.length ? plural(x.exerciseIds.length, 'ejercicio', 'ejercicios') : 'Sin ejercicios todavía';
-  const hero = r ? `<section class="hero t-${esc(r.id)}"><div class="letter">${esc(r.id)}</div><div class="lead">Hoy toca</div><h2>${esc(r.short)}</h2><div class="lead">${count(r)}</div><button class="btn btn-primary" data-start="${esc(r.id)}">${r.exerciseIds.length ? `Empezar entrenamiento ${I.arrow}` : 'Elegir ejercicios'}</button></section>`
-    : `<div class="eyebrow">¿Qué toca hoy?</div>${suggestBox(sug)}<div class="pick-grid">${store.routines.map(x => `<button class="pick ${sugId === x.id ? 'sug' : ''}" data-start="${esc(x.id)}"><span class="ltr t-${esc(x.id)}">${esc(x.id)}</span><span class="grow"><b>${esc(x.name)}</b>${sugId === x.id ? '<span class="pill ok">Sugerida</span>' : ''}<br><span class="small muted">${count(x)}${sug?.done.includes(x.id) ? ' · hecha esta semana' : ''}</span></span>${I.chev}</button>`).join('')}</div>`;
+  // Hoy sólo propone una; para elegir otra está la pestaña Rutinas.
+  const toRoutines = `<p class="to-routines">Para otra rutina, ve a <a href="#/rutinas">Rutinas</a></p>`;
+  const hero = r ? `<section class="hero t-${esc(r.id)}"><div class="letter">${esc(r.id)}</div><div class="lead">Hoy toca</div><h2>${esc(r.short)}</h2><div class="lead">${count(r)}</div><button class="btn btn-primary" data-start="${esc(r.id)}">${r.exerciseIds.length ? `Empezar entrenamiento ${I.arrow}` : 'Elegir ejercicios'}</button></section>${toRoutines}`
+    : `<div class="eyebrow">¿Qué toca hoy?</div>${suggestBox(sug)}${toRoutines}`;
   const lastTitle = last ? (last.routineIds.length ? last.routineIds.map(id => store.routine(id)?.short || id).join(' · ') : last.logs.length === 1 ? (store.exercise(last.logs[0].exerciseId)?.name || 'Ejercicio') : 'Entrenamiento libre') : '';
   const lastBox = last ? `<div class="eyebrow">Último entrenamiento</div><div class="card lastday">
       <a class="row ld-head" href="#/dia/${last.date}"><div class="grow"><b>${esc(lastTitle)}</b><div class="small muted">${esc(fLong(last.date))} · ${plural(last.logs.length, 'ejercicio', 'ejercicios')}</div></div>${I.chev}</a>
@@ -192,7 +193,7 @@ async function renderHoy() {
 
 /* Sugerencia de la rotación semanal A → B → C (se reinicia cada lunes) */
 function suggestBox(sug) {
-  if (!sug || !sug.cycle.length) return '';
+  if (!sug || !sug.cycle.length) return '<div class="suggest"><b>Elige qué entrenar hoy</b></div>';
   const name = id => `${id} · ${store.routine(id)?.short || ''}`;
   const doneToday = sug.today.filter(id => sug.cycle.includes(id));
   const nx = sug.next ? store.routine(sug.next) : null;
@@ -200,7 +201,9 @@ function suggestBox(sug) {
     <div class="small muted" style="margin-top:4px">${nx ? `La próxima vez te tocaría la rutina ${esc(name(nx.id))}.` : 'Con esto has hecho A, B y C esta semana.'}</div></div>`;
   if (nx) return `<div class="suggest"><div class="small muted">Sugerencia para hoy${sug.done.length ? ` · esta semana llevas ${esc(sug.done.join(', '))}` : ''}</div><b>Rutina ${esc(name(nx.id))}</b>
     <button class="btn btn-primary" data-start="${esc(nx.id)}">Empezar rutina ${esc(nx.id)} ${I.arrow}</button></div>`;
-  return `<div class="suggest"><div class="small muted">Esta semana ya has hecho A, B y C</div><b>Si vuelves, Full body es buena opción</b></div>`;
+  const fb = store.routine('D');
+  return `<div class="suggest"><div class="small muted">Esta semana ya has hecho A, B y C</div><b>Si vuelves, Full body es buena opción</b>
+    ${fb?.exerciseIds.length ? `<button class="btn btn-primary" data-start="D">Empezar Full body ${I.arrow}</button>` : ''}</div>`;
 }
 
 /* ---------- RUTINAS ---------- */
